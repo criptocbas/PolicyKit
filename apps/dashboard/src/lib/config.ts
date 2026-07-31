@@ -15,6 +15,8 @@ export const CLUSTER = (process.env.NEXT_PUBLIC_CLUSTER ??
 
 export const STORAGE_KEYS = {
   policy: "policykit.dashboard.policy",
+  policies: "policykit.dashboard.policies",
+  activePolicy: "policykit.dashboard.activePolicy",
   agentSecret: "policykit.dashboard.agentSecret",
   spendMint: "policykit.dashboard.spendMint",
   activity: "policykit.dashboard.activity",

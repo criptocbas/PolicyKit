@@ -99,6 +99,8 @@ export function buildPolicyStatus(
     spendMint: p.spendMint,
     programAllowlist: p.programAllowlist,
     mintAllowlist: p.mintAllowlist,
+    destinationAllowlist: p.destinationAllowlist ?? [],
+    destinationAllowlistEnabled: p.destinationAllowlistEnabled ?? false,
     inactiveReason,
   };
 }
@@ -122,6 +124,8 @@ export function previewSpend(
     amount: BN | number | bigint;
     mint: PublicKey;
     intentProgram: PublicKey;
+    /** Destination token account owner (wallet). Checked against dest allowlist. */
+    destinationOwner?: PublicKey;
     vaultBalance?: BN | number | bigint;
     nowSec?: number;
   }
@@ -174,6 +178,25 @@ export function previewSpend(
         ok: false,
         reason: "Mint is not on the allowlist",
         errorName: "MintNotAllowed",
+      };
+    }
+  }
+  if (p.destinationAllowlistEnabled) {
+    if (!args.destinationOwner) {
+      return {
+        ok: false,
+        reason: "Destination owner required when destination allowlist is enabled",
+        errorName: "DestinationNotAllowed",
+      };
+    }
+    const okDest = (p.destinationAllowlist ?? []).some((d) =>
+      d.equals(args.destinationOwner!)
+    );
+    if (!okDest) {
+      return {
+        ok: false,
+        reason: "Destination token account owner is not on the allowlist",
+        errorName: "DestinationNotAllowed",
       };
     }
   }

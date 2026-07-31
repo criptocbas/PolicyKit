@@ -61,7 +61,7 @@
 | ID | Threat | Impact | Mitigation | Residual |
 |----|--------|--------|------------|----------|
 | T1 | Compromised agent key | Drain up to remaining daily/per-tx/rate budget | Caps, rate limit, pause, clawback, program/mint lists | Until authority pauses/rotates, agent spends within caps |
-| T2 | Spoofed `intent_program` | Funds leave vault to unexpected destination while claiming allowed intent | Caps + mint allowlist + rate limit; monitoring of `SpendExecuted` | **Not full CPI mediation** — economic bound only |
+| T2 | Spoofed `intent_program` | Funds leave vault to unexpected destination while claiming allowed intent | Caps + mint allowlist + **destination owner allowlist** + rate limit; monitoring of `SpendExecuted` | **Not full CPI mediation** — recipient set can be constrained; still no forced Jupiter CPI |
 | T3 | Agent wallet funded with assets outside vault | Unrestricted movement via other plugins | Operational: fund vault only; agent needs fee SOL only | Plugin does not sandbox co-loaded tools |
 | T4 | Malicious depositor | Dust / wrong mint into vault | Clawback recovers any mint; agent can only spend `spend_mint` | Wrong mints sit until clawback |
 | T5 | Authority key compromise | Full drain via clawback; rule changes | Cold/hardware authority; separate from agent | Full loss of control |

@@ -784,6 +784,21 @@
       "code": 6023,
       "name": "InvalidDestination",
       "msg": "Destination token account must not be owned by the policy PDA"
+    },
+    {
+      "code": 6024,
+      "name": "DestinationListTooLong",
+      "msg": "Destination list exceeds maximum length"
+    },
+    {
+      "code": 6025,
+      "name": "EmptyDestinationAllowlist",
+      "msg": "Destination allowlist enabled but empty"
+    },
+    {
+      "code": 6026,
+      "name": "DestinationNotAllowed",
+      "msg": "Destination token account owner is not on the allowlist"
     }
   ],
   "types": [
@@ -900,6 +915,16 @@
           },
           {
             "name": "mint_allowlist",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "destination_allowlist_enabled",
+            "type": "bool"
+          },
+          {
+            "name": "destination_allowlist",
             "type": {
               "vec": "pubkey"
             }
@@ -1091,6 +1116,19 @@
             "type": {
               "vec": "pubkey"
             }
+          },
+          {
+            "name": "destination_allowlist_enabled",
+            "docs": [
+              "When true, destination token account **owner** must be listed."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "destination_allowlist",
+            "type": {
+              "vec": "pubkey"
+            }
           }
         ]
       }
@@ -1271,6 +1309,16 @@
           },
           {
             "name": "mint_allowlist",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "destination_allowlist_enabled",
+            "type": "bool"
+          },
+          {
+            "name": "destination_allowlist",
             "type": {
               "vec": "pubkey"
             }

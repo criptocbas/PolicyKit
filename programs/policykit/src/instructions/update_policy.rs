@@ -21,6 +21,8 @@ pub fn update_policy_handler(ctx: Context<UpdatePolicy>, params: UpdatePolicyPar
         &params.program_denylist,
         params.mint_allowlist_enabled,
         &params.mint_allowlist,
+        params.destination_allowlist_enabled,
+        &params.destination_allowlist,
         params.max_actions_per_window,
         params.window_seconds,
         params.expires_at,
@@ -39,6 +41,8 @@ pub fn update_policy_handler(ctx: Context<UpdatePolicy>, params: UpdatePolicyPar
     policy.program_denylist = params.program_denylist;
     policy.mint_allowlist_enabled = params.mint_allowlist_enabled;
     policy.mint_allowlist = params.mint_allowlist;
+    policy.destination_allowlist_enabled = params.destination_allowlist_enabled;
+    policy.destination_allowlist = params.destination_allowlist;
 
     emit!(PolicyUpdated {
         policy: policy.key(),

@@ -10,15 +10,37 @@ export interface TemplateContext {
   decimals?: number;
   /** Optional extra allowed programs beyond the template defaults. */
   extraPrograms?: PublicKey[];
+  /**
+   * Destination token account owners (wallets) allowed to receive spends.
+   * Defaults to `[agent]` (agent may only pay itself) when destination allowlist is on.
+   */
+  destinationOwners?: PublicKey[];
+  /** Set false to leave destination allowlist disabled (open destinations). */
+  destinationAllowlistEnabled?: boolean;
 }
 
 function ui(amount: number, decimals: number): BN {
   return new BN(amount).mul(new BN(10).pow(new BN(decimals)));
 }
 
+function destinationFields(ctx: TemplateContext): Pick<
+  CreatePolicyParams,
+  "destinationAllowlistEnabled" | "destinationAllowlist"
+> {
+  const enabled = ctx.destinationAllowlistEnabled !== false;
+  const list =
+    ctx.destinationOwners && ctx.destinationOwners.length > 0
+      ? ctx.destinationOwners
+      : [ctx.agent];
+  return {
+    destinationAllowlistEnabled: enabled,
+    destinationAllowlist: enabled ? list : [],
+  };
+}
+
 /**
  * Conservative trading agent: tight daily budget, Jupiter-only, rate limited.
- * Default pitch-demo template.
+ * Default pitch-demo template. Destination allowlist = agent only.
  */
 export function conservativeTradingTemplate(
   ctx: TemplateContext
@@ -39,6 +61,7 @@ export function conservativeTradingTemplate(
     programDenylist: [],
     mintAllowlistEnabled: true,
     mintAllowlist: [ctx.spendMint],
+    ...destinationFields(ctx),
   };
 }
 
@@ -48,7 +71,6 @@ export function conservativeTradingTemplate(
  */
 export function x402PaymentsTemplate(ctx: TemplateContext): CreatePolicyParams {
   const d = ctx.decimals ?? 6;
-  // Default Jupiter so allowlist is never enabled+empty; pass extraPrograms to extend.
   const programs =
     ctx.extraPrograms && ctx.extraPrograms.length > 0
       ? ctx.extraPrograms
@@ -67,6 +89,7 @@ export function x402PaymentsTemplate(ctx: TemplateContext): CreatePolicyParams {
     programDenylist: [],
     mintAllowlistEnabled: true,
     mintAllowlist: [ctx.spendMint],
+    ...destinationFields(ctx),
   };
 }
 
@@ -92,6 +115,7 @@ export function researchLimitedSpendTemplate(
     programDenylist: [],
     mintAllowlistEnabled: true,
     mintAllowlist: [ctx.spendMint],
+    ...destinationFields(ctx),
   };
 }
 

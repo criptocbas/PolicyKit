@@ -63,6 +63,8 @@ Full CPI mediation into arbitrary DeFi programs is a deliberate post-MVP hardeni
 | `program_denylist` | `Vec<Pubkey>` max 10 | |
 | `mint_allowlist_enabled` | `bool` | |
 | `mint_allowlist` | `Vec<Pubkey>` max 10 | Transferred mint must be listed when enabled |
+| `destination_allowlist_enabled` | `bool` | When true, destination **owner** must be listed |
+| `destination_allowlist` | `Vec<Pubkey>` max 10 | Wallet pubkeys (token account owners), not ATAs |
 
 ---
 
@@ -87,12 +89,15 @@ Full CPI mediation into arbitrary DeFi programs is a deliberate post-MVP hardeni
 4. **`mint == spend_mint`** (`SpendMintRequired`)
 5. Program allowlist / denylist vs `intent_program`
 6. Mint allowlist vs transferred mint
-7. Rate limit (`actions_in_window < max`)
-8. Per-tx + daily spend limits; update counters
-9. Destination token owner ≠ policy PDA
-10. Balance check
-11. PDA-signed classic SPL **`Transfer`** CPI (not Token-2022 `transfer_checked`)
-12. Emit `SpendExecuted`
+7. Destination owner allowlist (if enabled) vs destination token account **owner**
+8. Rate limit (`actions_in_window < max`)
+9. Per-tx + daily spend limits; update counters
+10. Destination token owner ≠ policy PDA
+11. Balance check
+12. PDA-signed classic SPL **`Transfer`** CPI (not Token-2022 `transfer_checked`)
+13. Emit `SpendExecuted`
+
+**Breaking (Phase B):** Adding destination allowlist fields increases Policy account size. Existing policies created before this upgrade cannot be deserialized — recreate them after redeploy.
 
 Mistaken non-`spend_mint` deposits are recovered with **`clawback`**, not agent spend.
 

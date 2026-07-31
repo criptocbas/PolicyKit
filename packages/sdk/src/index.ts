@@ -4,6 +4,7 @@ export {
   SECONDS_PER_DAY,
   MAX_PROGRAM_LIST,
   MAX_MINT_LIST,
+  MAX_DESTINATION_LIST,
   KNOWN_PROGRAMS,
 } from "./constants";
 

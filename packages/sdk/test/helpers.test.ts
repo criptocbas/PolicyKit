@@ -45,6 +45,8 @@ function makePolicy(overrides: Partial<PolicyAccount> = {}): PolicyAccount {
     programDenylist: [],
     mintAllowlistEnabled: false,
     mintAllowlist: [],
+    destinationAllowlistEnabled: false,
+    destinationAllowlist: [],
     ...overrides,
   };
 }
@@ -213,6 +215,41 @@ describe("previewSpend", () => {
       vaultBalance: 100_000_000,
       nowSec: now,
     });
+    expect(r).to.deep.equal({ ok: true });
+  });
+
+  it("rejects destination owner not on allowlist", () => {
+    const r = previewSpend(
+      makePolicy({
+        destinationAllowlistEnabled: true,
+        destinationAllowlist: [AGENT],
+      }),
+      {
+        amount: 1_000_000,
+        mint: SPEND_MINT,
+        intentProgram: JUPITER,
+        destinationOwner: AUTHORITY,
+        nowSec: now,
+      }
+    );
+    expect(r.ok).to.equal(false);
+    if (!r.ok) expect(r.errorName).to.equal("DestinationNotAllowed");
+  });
+
+  it("accepts destination owner on allowlist", () => {
+    const r = previewSpend(
+      makePolicy({
+        destinationAllowlistEnabled: true,
+        destinationAllowlist: [AGENT],
+      }),
+      {
+        amount: 1_000_000,
+        mint: SPEND_MINT,
+        intentProgram: JUPITER,
+        destinationOwner: AGENT,
+        nowSec: now,
+      }
+    );
     expect(r).to.deep.equal({ ok: true });
   });
 });

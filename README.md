@@ -16,8 +16,9 @@ Built for Colosseum Eternal. Evolution of the X402Guard pattern into a general p
 - [x] **Phase 2** — TypeScript SDK (`@policykit/sdk`) + Solana Agent Kit plugin  
 - [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)  
 - [x] **Phase A (quality)** — CI, unit tests, threat model, error catalog, architecture docs  
+- [x] **Phase B (product depth)** — dashboard control room, chain activity, destination owner allowlist  
 
-MVP feature set is complete. Next focus: product depth (dashboard, monitoring, tighter spend bounds) — not stack rewrites.
+MVP + control room + destination allowlist. Next: public proof (devnet agent) / distribution — not stack rewrites.
 
 ## Docs
 

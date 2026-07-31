@@ -319,6 +319,19 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
     }
   });
 
+  it("fails cleanly: DestinationNotAllowed (outsider wallet)", async () => {
+    // Conservative template allowlists agent as sole destination owner.
+    const { policy } = await setupConservativePolicy();
+    try {
+      await agentSpend(policy, ui(1), JUPITER, outsiderUsdc);
+      expect.fail("should reject");
+    } catch (e) {
+      const err = e as PolicyKitError;
+      expect(err.errorName).to.equal("DestinationNotAllowed");
+      expect(err.title).to.equal("Destination not allowed");
+    }
+  });
+
   it("fails cleanly: PolicyExpired", async () => {
     // Generous window so create+fund+first spend always fits; then wait until past expires_at.
     const expiresAt = Math.floor(Date.now() / 1000) + 12;
@@ -347,6 +360,7 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
       amount: ui(100),
       mint: usdcMint,
       intentProgram: JUPITER,
+      destinationOwner: agent.publicKey,
     });
     expect(bad.ok).to.equal(false);
     if (!bad.ok) {
@@ -356,6 +370,7 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
       amount: ui(5),
       mint: usdcMint,
       intentProgram: JUPITER,
+      destinationOwner: agent.publicKey,
     });
     expect(good.ok).to.equal(true);
   });
@@ -584,6 +599,7 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
       expect((e as PolicyKitError).errorName).to.equal("UnauthorizedAgent");
     }
 
-    await agentSpend(policy, ui(1), JUPITER, newAgentUsdc, newAgent);
+    // Destination allowlist still lists original agent; pay agent ATA while new agent signs.
+    await agentSpend(policy, ui(1), JUPITER, agentUsdc, newAgent);
   });
 });

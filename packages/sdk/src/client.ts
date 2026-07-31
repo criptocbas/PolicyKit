@@ -56,6 +56,8 @@ function normalizeCreateParams(params: CreatePolicyParams) {
     programDenylist: params.programDenylist,
     mintAllowlistEnabled: params.mintAllowlistEnabled,
     mintAllowlist: params.mintAllowlist,
+    destinationAllowlistEnabled: params.destinationAllowlistEnabled,
+    destinationAllowlist: params.destinationAllowlist,
   };
 }
 
@@ -72,6 +74,8 @@ function normalizeUpdateParams(params: UpdatePolicyParams) {
     programDenylist: params.programDenylist,
     mintAllowlistEnabled: params.mintAllowlistEnabled,
     mintAllowlist: params.mintAllowlist,
+    destinationAllowlistEnabled: params.destinationAllowlistEnabled,
+    destinationAllowlist: params.destinationAllowlist,
   };
 }
 

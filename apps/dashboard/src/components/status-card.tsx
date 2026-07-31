@@ -130,11 +130,56 @@ export function StatusCard({
               </a>
             }
           />
-          <Row label="Agent" value={<span className="font-mono">{shortKey(status.agent, 6)}</span>} />
+          <Row
+            label="Agent"
+            value={
+              <a
+                href={solscanAddress(status.agent.toBase58())}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 font-mono text-mint-400 hover:text-mint-300"
+              >
+                {shortKey(status.agent, 6)}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            }
+          />
           <Row
             label="Spend mint"
             value={
               <span className="font-mono">{shortKey(status.spendMint, 6)}</span>
+            }
+          />
+          <Row
+            label="Expires"
+            value={
+              <span className="font-mono text-xs">
+                {status.policy.expiresAt.isZero()
+                  ? "Never"
+                  : new Date(
+                      status.policy.expiresAt.toNumber() * 1000
+                    ).toLocaleString()}
+              </span>
+            }
+          />
+          <Row
+            label="Programs"
+            value={
+              <span className="font-mono text-xs">
+                {status.policy.programAllowlistEnabled
+                  ? `${status.programAllowlist.length} allowlisted`
+                  : "open"}
+              </span>
+            }
+          />
+          <Row
+            label="Destinations"
+            value={
+              <span className="font-mono text-xs">
+                {status.destinationAllowlistEnabled
+                  ? `${status.destinationAllowlist?.length ?? 0} owners`
+                  : "open"}
+              </span>
             }
           />
           <Row

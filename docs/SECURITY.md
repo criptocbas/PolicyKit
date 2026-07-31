@@ -33,12 +33,13 @@ Order of checks:
 6. Program allowlist (if enabled)  
 7. Program denylist (if enabled)  
 8. Mint allowlist (if enabled)  
-9. Rate limit (`actions_in_window < max`)  
-10. Per-tx limit, daily limit; update spend counters  
-11. Increment action counter  
-12. Destination owner ≠ policy PDA (`InvalidDestination`)  
-13. Balance check  
-14. PDA-signed classic SPL `Transfer`  
+9. Destination owner allowlist (if enabled) — wallet owning the destination ATA  
+10. Rate limit (`actions_in_window < max`)  
+11. Per-tx limit, daily limit; update spend counters  
+12. Increment action counter  
+13. Destination owner ≠ policy PDA (`InvalidDestination`)  
+14. Balance check  
+15. PDA-signed classic SPL `Transfer`  
 
 ## Intent program (honest limitations)
 
@@ -48,10 +49,11 @@ A malicious agent could declare an allowed intent and send funds elsewhere. **Ec
 
 - Per-transaction and daily spend caps on `spend_mint`
 - Mint allowlist (when enabled)
+- **Destination owner allowlist** (when enabled) — recipient set is constrained even if intent is spoofed
 - Rate limits
 - Pause + clawback by authority
 
-Full CPI mediation into DeFi programs is the intentional post-MVP hardening path.
+Full CPI mediation into DeFi programs is the intentional post-MVP hardening path. With destination allowlist + caps, spoofed intent cannot pay arbitrary wallets.
 
 ## Agent Kit composition
 

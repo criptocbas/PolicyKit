@@ -21,6 +21,10 @@ export interface CreatePolicyParams {
   programDenylist: PublicKey[];
   mintAllowlistEnabled: boolean;
   mintAllowlist: PublicKey[];
+  /** When true, destination token account owner must be listed. */
+  destinationAllowlistEnabled: boolean;
+  /** Wallet pubkeys (token account owners), not ATAs. */
+  destinationAllowlist: PublicKey[];
 }
 
 /** Params for `update_policy` (does not change agent / spend_mint / authority). */
@@ -36,6 +40,8 @@ export interface UpdatePolicyParams {
   programDenylist: PublicKey[];
   mintAllowlistEnabled: boolean;
   mintAllowlist: PublicKey[];
+  destinationAllowlistEnabled: boolean;
+  destinationAllowlist: PublicKey[];
 }
 
 /** Decoded on-chain Policy account (camelCase). */
@@ -63,6 +69,8 @@ export interface PolicyAccount {
   programDenylist: PublicKey[];
   mintAllowlistEnabled: boolean;
   mintAllowlist: PublicKey[];
+  destinationAllowlistEnabled: boolean;
+  destinationAllowlist: PublicKey[];
 }
 
 /** Client-side status snapshot for dashboards and agents. */
@@ -85,6 +93,8 @@ export interface PolicyStatus {
   spendMint: PublicKey;
   programAllowlist: PublicKey[];
   mintAllowlist: PublicKey[];
+  destinationAllowlist: PublicKey[];
+  destinationAllowlistEnabled: boolean;
   /** Human-readable reason when not active. */
   inactiveReason?: string;
 }

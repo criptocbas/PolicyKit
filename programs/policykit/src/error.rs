@@ -74,4 +74,13 @@ pub enum PolicyKitError {
 
     #[msg("Destination token account must not be owned by the policy PDA")]
     InvalidDestination,
+
+    #[msg("Destination list exceeds maximum length")]
+    DestinationListTooLong,
+
+    #[msg("Destination allowlist enabled but empty")]
+    EmptyDestinationAllowlist,
+
+    #[msg("Destination token account owner is not on the allowlist")]
+    DestinationNotAllowed,
 }

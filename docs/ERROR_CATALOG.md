@@ -33,6 +33,9 @@ When adding an error: update Rust + SDK map + this doc + a fails-cleanly test.
 | 6021 | `SpendMintRequired` | `execute_spend` mint ≠ `policy.spend_mint` | Wrong mint |
 | 6022 | `InvalidAgent` | Agent is default pubkey on create/set_agent | Invalid agent |
 | 6023 | `InvalidDestination` | Destination token account owner is the policy PDA | Invalid destination |
+| 6024 | `DestinationListTooLong` | Destination allowlist length > 10 | Destination list too long |
+| 6025 | `EmptyDestinationAllowlist` | Destination allowlist enabled but empty | Empty destination allowlist |
+| 6026 | `DestinationNotAllowed` | Destination token account **owner** not listed | Destination not allowed |
 
 ## Client mapping
 

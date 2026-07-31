@@ -27,6 +27,9 @@ export const POLICYKIT_ERROR_CODES = {
   SpendMintRequired: 6021,
   InvalidAgent: 6022,
   InvalidDestination: 6023,
+  DestinationListTooLong: 6024,
+  EmptyDestinationAllowlist: 6025,
+  DestinationNotAllowed: 6026,
 } as const;
 
 export type PolicyKitErrorName = keyof typeof POLICYKIT_ERROR_CODES;
@@ -58,6 +61,10 @@ export const POLICYKIT_ERROR_MESSAGES: Record<PolicyKitErrorName, string> = {
   InvalidAgent: "Agent pubkey must not be the default public key.",
   InvalidDestination:
     "Destination token account must not be owned by the policy PDA.",
+  DestinationListTooLong: "Destination list exceeds the maximum length (10).",
+  EmptyDestinationAllowlist: "Destination allowlist is enabled but empty.",
+  DestinationNotAllowed:
+    "Destination token account owner is not on the policy destination allowlist.",
 };
 
 /** Demo-friendly short titles for pitch / UI. */
@@ -86,6 +93,9 @@ export const POLICYKIT_ERROR_TITLES: Record<PolicyKitErrorName, string> = {
   SpendMintRequired: "Wrong mint",
   InvalidAgent: "Invalid agent",
   InvalidDestination: "Invalid destination",
+  DestinationListTooLong: "Destination list too long",
+  EmptyDestinationAllowlist: "Empty destination allowlist",
+  DestinationNotAllowed: "Destination not allowed",
 };
 
 const CODE_TO_NAME = Object.fromEntries(

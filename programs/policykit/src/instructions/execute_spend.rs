@@ -49,9 +49,14 @@ pub fn execute_spend_handler(
     );
 
     // Enforce + record before CPI so failed checks never move funds.
-    ctx.accounts
-        .policy
-        .check_and_record_spend(amount, &mint_key, &intent_program, now)?;
+    // Destination allowlist is checked against the token account **owner** (wallet).
+    ctx.accounts.policy.check_and_record_spend(
+        amount,
+        &mint_key,
+        &intent_program,
+        &destination.owner,
+        now,
+    )?;
 
     require!(
         vault.amount >= amount,

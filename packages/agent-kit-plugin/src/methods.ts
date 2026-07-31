@@ -110,10 +110,12 @@ export function createPolicyKitMethods(
     const intent = resolveIntent(input, cfg);
     const vaultBalance = await c.getVaultBalance(cfg.policy, mint);
     const amount = toBn(input.amount);
+    const destinationOwner = resolveDestinationOwner(input, getAgent());
     const preview = previewSpend(policy, {
       amount,
       mint,
       intentProgram: intent,
+      destinationOwner,
       vaultBalance,
     });
     const remainingDaily = (
@@ -162,12 +164,15 @@ export function createPolicyKitMethods(
 
       const amount = toBn(input.amount);
 
+      const destinationOwner = resolveDestinationOwner(input, agent);
+
       if (cfg.clientSidePreflight) {
         const vaultBalance = await c.getVaultBalance(cfg.policy, mint);
         const preview = previewSpend(policy, {
           amount,
           mint,
           intentProgram: intent,
+          destinationOwner,
           vaultBalance,
         });
         if (!preview.ok) {
@@ -318,4 +323,17 @@ function resolveDestination(
   }
   const owner = new PublicKey(input.destination);
   return getAssociatedTokenAddressSync(mint, owner, true, TOKEN_PROGRAM_ID);
+}
+
+/** Wallet pubkey for destination allowlist preflight (not the ATA). */
+function resolveDestinationOwner(
+  input: SpendUnderPolicyInput,
+  agent: SolanaAgentKit
+): PublicKey {
+  if (input.destination) {
+    return new PublicKey(input.destination);
+  }
+  // When only destinationToken is set, preflight assumes agent wallet is owner
+  // (common demo path). On-chain still enforces the real ATA owner.
+  return agent.wallet.publicKey;
 }

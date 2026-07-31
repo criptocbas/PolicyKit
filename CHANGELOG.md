@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-31
+
+### Added
+
+- **Destination owner allowlist** on-chain (`destination_allowlist_*`, errors 6024–6026).
+- Dashboard control room: multi-policy switcher, update policy, set agent, chain activity feed.
+- Agent demo: “Pay outsider (dest deny)” failure path.
+- Templates default to agent-only destination allowlist.
+
+### Changed
+
+- Policy account layout (breaking for pre-0.2 policies — recreate after upgrade).
+- `check_and_record_spend` takes destination owner; `previewSpend` supports `destinationOwner`.
+
 ## [0.1.1] - 2026-07-31
 
 ### Added

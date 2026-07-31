@@ -17,6 +17,9 @@ export const MAX_PROGRAM_LIST = 10;
 /** Max mints on the mint allowlist (on-chain). */
 export const MAX_MINT_LIST = 10;
 
+/** Max destination owners on the destination allowlist (on-chain). */
+export const MAX_DESTINATION_LIST = 10;
+
 /** Well-known program IDs useful as intent_program values. */
 export const KNOWN_PROGRAMS = {
   /** Jupiter aggregator v6 */

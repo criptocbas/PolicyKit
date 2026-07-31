@@ -140,6 +140,10 @@ describe("policykit", () => {
       programDenylist: [FORBIDDEN_PROGRAM],
       mintAllowlistEnabled: true,
       mintAllowlist: [usdcMint],
+      // Phase B: destination allowlist off by default in tests (open destinations)
+      // so existing cases keep working; enable per-case when testing dest rules.
+      destinationAllowlistEnabled: false,
+      destinationAllowlist: [] as PublicKey[],
       ...overrides,
     };
   }
@@ -923,6 +927,8 @@ describe("policykit", () => {
         programDenylist: [],
         mintAllowlistEnabled: true,
         mintAllowlist: [usdcMint],
+        destinationAllowlistEnabled: false,
+        destinationAllowlist: [],
       } as any)
       .accounts({ authority: authority.publicKey, policy: pda })
       .rpc();
@@ -1059,6 +1065,8 @@ describe("policykit", () => {
           programDenylist: [],
           mintAllowlistEnabled: true,
           mintAllowlist: [usdcMint],
+          destinationAllowlistEnabled: false,
+          destinationAllowlist: [],
         } as any)
         .accounts({ authority: authority.publicKey, policy: pda })
         .rpc();
@@ -1128,6 +1136,8 @@ describe("policykit", () => {
           programDenylist: [],
           mintAllowlistEnabled: true,
           mintAllowlist: [usdcMint],
+          destinationAllowlistEnabled: false,
+          destinationAllowlist: [],
         } as any)
         .accounts({ authority: outsider.publicKey, policy: pda })
         .signers([outsider])
@@ -1208,5 +1218,135 @@ describe("policykit", () => {
     expect(p2.spentToday.toNumber()).to.equal(oneUsdc(2).toNumber());
     expect(p1.policyId.toNumber()).to.equal(32);
     expect(p2.policyId.toNumber()).to.equal(33);
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase B — destination owner allowlist
+  // -------------------------------------------------------------------------
+
+  it("allows spend to agent when destination allowlist is agent-only", async () => {
+    const pda = await createPolicyWithParams(
+      new BN(540),
+      defaultCreateParams({
+        destinationAllowlistEnabled: true,
+        destinationAllowlist: [agent.publicKey],
+      })
+    );
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(20));
+    await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(1), JUPITER_V6);
+  });
+
+  it("rejects spend to outsider when destination not allowlisted", async () => {
+    const pda = await createPolicyWithParams(
+      new BN(541),
+      defaultCreateParams({
+        destinationAllowlistEnabled: true,
+        destinationAllowlist: [agent.publicKey],
+      })
+    );
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(20));
+    try {
+      await executeSpend(
+        pda,
+        usdcMint,
+        vault,
+        outsiderUsdc,
+        oneUsdc(1),
+        JUPITER_V6
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "DestinationNotAllowed");
+    }
+  });
+
+  it("rejects create with empty destination allowlist when enabled", async () => {
+    try {
+      await createPolicyWithParams(
+        new BN(542),
+        defaultCreateParams({
+          destinationAllowlistEnabled: true,
+          destinationAllowlist: [],
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "EmptyDestinationAllowlist");
+    }
+  });
+
+  it("rejects create with destination list longer than max", async () => {
+    const eleven = Array.from({ length: 11 }, () => Keypair.generate().publicKey);
+    try {
+      await createPolicyWithParams(
+        new BN(543),
+        defaultCreateParams({
+          destinationAllowlistEnabled: true,
+          destinationAllowlist: eleven,
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "DestinationListTooLong");
+    }
+  });
+
+  it("update_policy can enable destination allowlist and block open destinations", async () => {
+    const pda = await createPolicyWithParams(
+      new BN(544),
+      defaultCreateParams({
+        destinationAllowlistEnabled: false,
+        destinationAllowlist: [],
+      })
+    );
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(30));
+
+    // Open destinations: outsider OK
+    await executeSpend(
+      pda,
+      usdcMint,
+      vault,
+      outsiderUsdc,
+      oneUsdc(1),
+      JUPITER_V6
+    );
+
+    await program.methods
+      .updatePolicy({
+        expiresAt: new BN(0),
+        maxPerTransaction: oneUsdc(20),
+        maxPerDay: oneUsdc(50),
+        maxActionsPerWindow: 5,
+        windowSeconds: 60,
+        programAllowlistEnabled: true,
+        programAllowlist: [JUPITER_V6],
+        programDenylistEnabled: false,
+        programDenylist: [],
+        mintAllowlistEnabled: true,
+        mintAllowlist: [usdcMint],
+        destinationAllowlistEnabled: true,
+        destinationAllowlist: [agent.publicKey],
+      } as any)
+      .accounts({ authority: authority.publicKey, policy: pda })
+      .rpc();
+
+    try {
+      await executeSpend(
+        pda,
+        usdcMint,
+        vault,
+        outsiderUsdc,
+        oneUsdc(1),
+        JUPITER_V6
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "DestinationNotAllowed");
+    }
+
+    await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(1), JUPITER_V6);
   });
 });

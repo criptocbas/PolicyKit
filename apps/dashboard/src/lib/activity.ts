@@ -10,7 +10,9 @@ export type ActivityKind =
   | "pause"
   | "unpause"
   | "clawback"
-  | "mint";
+  | "mint"
+  | "update"
+  | "set_agent";
 
 export interface ActivityItem {
   id: string;
@@ -20,6 +22,7 @@ export interface ActivityItem {
   signature?: string;
   ts: number;
   success: boolean;
+  source?: "local" | "chain";
 }
 
 export function loadActivity(): ActivityItem[] {
@@ -38,6 +41,7 @@ export function pushActivity(
 ): ActivityItem[] {
   const next: ActivityItem = {
     ...item,
+    source: item.source ?? "local",
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     ts: item.ts ?? Math.floor(Date.now() / 1000),
   };

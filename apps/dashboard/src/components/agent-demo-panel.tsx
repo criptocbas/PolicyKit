@@ -116,16 +116,55 @@ export function AgentDemoPanel({
     }
   }
 
+  async function ensureOwnerAta(owner: PublicKey): Promise<PublicKey> {
+    if (!mint || !wallet.publicKey || !wallet.sendTransaction) {
+      throw new Error("Wallet / mint missing");
+    }
+    const ata = getAssociatedTokenAddressSync(
+      mint,
+      owner,
+      false,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    const info = await connection.getAccountInfo(ata);
+    if (info) return ata;
+
+    const tx = new Transaction().add(
+      createAssociatedTokenAccountInstruction(
+        wallet.publicKey,
+        ata,
+        owner,
+        mint
+      )
+    );
+    const { blockhash, lastValidBlockHeight } =
+      await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = wallet.publicKey;
+    const sig = await wallet.sendTransaction(tx, connection);
+    await connection.confirmTransaction(
+      { signature: sig, blockhash, lastValidBlockHeight },
+      "confirmed"
+    );
+    return ata;
+  }
+
   async function runSpend(
     amountUi: string,
     intent: PublicKey,
-    label: string
+    label: string,
+    destOwner?: PublicKey
   ): Promise<DemoResult> {
     if (!policy || !mint) {
       throw new Error("Create a policy and mint first.");
     }
     try {
-      const dest = await ensureAgentAta();
+      const owner = destOwner ?? agent.publicKey;
+      const dest =
+        owner.equals(agent.publicKey)
+          ? await ensureAgentAta()
+          : await ensureOwnerAta(owner);
       const sig = await client.executeSpend({
         policy,
         mint,
@@ -205,6 +244,29 @@ export function AgentDemoPanel({
     }
   }
 
+  async function handleBadDestination() {
+    if (!wallet.publicKey) {
+      onError("Connect wallet first");
+      return;
+    }
+    setBusy(true);
+    try {
+      // Authority wallet is almost never on the agent-only destination allowlist.
+      applyResult(
+        await runSpend(
+          "1",
+          KNOWN_PROGRAMS.JUPITER_V6,
+          "Outsider destination",
+          wallet.publicKey
+        )
+      );
+    } catch (e: unknown) {
+      onError(friendlyErrorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleDemoSequence() {
     setBusy(true);
     try {
@@ -273,6 +335,14 @@ export function AgentDemoPanel({
             Blow daily / per-tx limit
           </Button>
           <Button
+            disabled={busy || !policy || !mint || !wallet.publicKey}
+            onClick={handleBadDestination}
+            variant="outline"
+          >
+            Pay outsider (dest deny)
+          </Button>
+          <Button
+            className="sm:col-span-2"
             disabled={busy || !policy || !mint}
             onClick={handleDemoSequence}
           >
@@ -360,7 +430,8 @@ export function AgentDemoPanel({
         <p className="text-xs leading-relaxed text-mist-500">
           Agent key is a demo keypair stored in this browser. Authority wallet
           pays fees; agent co-signs <code className="text-mist-400">execute_spend</code>.
-          Forbidden path uses Drift as intent while only Jupiter is allowlisted.
+          Conservative policies allowlist Jupiter + agent as destination owner.
+          Forbidden: Drift intent, outsider destination, or over budget.
         </p>
       </CardContent>
     </Card>

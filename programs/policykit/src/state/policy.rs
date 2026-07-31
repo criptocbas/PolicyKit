@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::{MAX_MINT_LIST, MAX_PROGRAM_LIST, SECONDS_PER_DAY};
+use crate::constants::{MAX_DESTINATION_LIST, MAX_MINT_LIST, MAX_PROGRAM_LIST, SECONDS_PER_DAY};
 use crate::error::PolicyKitError;
 
 /// On-chain policy: rules, counters, and vault authority.
@@ -63,6 +63,11 @@ pub struct Policy {
     pub mint_allowlist_enabled: bool,
     #[max_len(MAX_MINT_LIST)]
     pub mint_allowlist: Vec<Pubkey>,
+
+    /// When true, destination token account **owner** must be listed.
+    pub destination_allowlist_enabled: bool,
+    #[max_len(MAX_DESTINATION_LIST)]
+    pub destination_allowlist: Vec<Pubkey>,
 }
 
 /// Parameters for creating a policy.
@@ -82,6 +87,8 @@ pub struct CreatePolicyParams {
     pub program_denylist: Vec<Pubkey>,
     pub mint_allowlist_enabled: bool,
     pub mint_allowlist: Vec<Pubkey>,
+    pub destination_allowlist_enabled: bool,
+    pub destination_allowlist: Vec<Pubkey>,
 }
 
 /// Parameters for updating mutable policy rules (not authority, agent, id, spend_mint).
@@ -99,6 +106,8 @@ pub struct UpdatePolicyParams {
     pub program_denylist: Vec<Pubkey>,
     pub mint_allowlist_enabled: bool,
     pub mint_allowlist: Vec<Pubkey>,
+    pub destination_allowlist_enabled: bool,
+    pub destination_allowlist: Vec<Pubkey>,
 }
 
 impl Policy {
@@ -110,6 +119,8 @@ impl Policy {
         program_denylist: &[Pubkey],
         mint_allowlist_enabled: bool,
         mint_allowlist: &[Pubkey],
+        destination_allowlist_enabled: bool,
+        destination_allowlist: &[Pubkey],
         max_actions_per_window: u32,
         window_seconds: u32,
         expires_at: i64,
@@ -128,12 +139,20 @@ impl Policy {
             PolicyKitError::MintListTooLong
         );
         require!(
+            destination_allowlist.len() <= MAX_DESTINATION_LIST,
+            PolicyKitError::DestinationListTooLong
+        );
+        require!(
             !program_allowlist_enabled || !program_allowlist.is_empty(),
             PolicyKitError::EmptyProgramAllowlist
         );
         require!(
             !mint_allowlist_enabled || !mint_allowlist.is_empty(),
             PolicyKitError::EmptyMintAllowlist
+        );
+        require!(
+            !destination_allowlist_enabled || !destination_allowlist.is_empty(),
+            PolicyKitError::EmptyDestinationAllowlist
         );
         // Denylist may be empty even when "enabled" (no-op); still require valid rate window.
         let _ = program_denylist_enabled;
@@ -191,12 +210,14 @@ impl Policy {
 
     /// Full enforcement path for `execute_spend`. Mutates counters on success.
     ///
-    /// Order: active → windows → program lists → mint list → rate → spend limits → record.
+    /// Order: active → windows → spend_mint → program lists → mint list →
+    /// destination owner allowlist → rate → spend limits → record.
     pub fn check_and_record_spend(
         &mut self,
         amount: u64,
         mint: &Pubkey,
         intent_program: &Pubkey,
+        destination_owner: &Pubkey,
         now: i64,
     ) -> Result<()> {
         require!(amount > 0, PolicyKitError::ZeroAmount);
@@ -224,6 +245,15 @@ impl Policy {
             require!(
                 self.mint_allowlist.iter().any(|m| m == mint),
                 PolicyKitError::MintNotAllowed
+            );
+        }
+
+        if self.destination_allowlist_enabled {
+            require!(
+                self.destination_allowlist
+                    .iter()
+                    .any(|d| d == destination_owner),
+                PolicyKitError::DestinationNotAllowed
             );
         }
 

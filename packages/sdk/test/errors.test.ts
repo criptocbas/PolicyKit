@@ -8,14 +8,14 @@ import {
 } from "../src/errors";
 
 describe("POLICYKIT_ERROR_CODES catalog", () => {
-  it("covers every code from 6000 through 6023 exactly once", () => {
+  it("covers every code from 6000 through 6026 exactly once", () => {
     const codes = Object.values(POLICYKIT_ERROR_CODES);
-    expect(codes).to.have.length(24);
-    for (let c = 6000; c <= 6023; c++) {
+    expect(codes).to.have.length(27);
+    for (let c = 6000; c <= 6026; c++) {
       expect(codes).to.include(c, `missing code ${c}`);
     }
     const unique = new Set(codes);
-    expect(unique.size).to.equal(24);
+    expect(unique.size).to.equal(27);
   });
 
   it("has a message and title for every named error", () => {
@@ -36,6 +36,7 @@ describe("POLICYKIT_ERROR_CODES catalog", () => {
     expect(titles).to.include("Policy expired");
     expect(titles).to.include("Not agent");
     expect(titles).to.include("Over per-tx limit");
+    expect(titles).to.include("Destination not allowed");
   });
 });
 

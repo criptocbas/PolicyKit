@@ -43,11 +43,15 @@ Deploy PolicyKit to that cluster before creating policies.
 2. Set the three `NEXT_PUBLIC_*` env vars.
 3. Framework preset: Next.js.
 
-## Demo script (≤30s)
+## Demo script (≤45s)
 
 1. Connect wallet  
 2. **Create demo mint**  
-3. **Create policy** → Conservative trading  
+3. **Create policy** → Conservative trading (agent-only destinations)  
 4. **Deposit** 100  
-5. **Run success → fail sequence**  
-6. Point at remaining budget + coral “Program not allowed” card  
+5. **Allowed spend (Jupiter)** → success  
+6. **Forbidden (Drift)** → “Program not allowed”  
+7. **Pay outsider** → “Destination not allowed”  
+8. Optionally **Update policy** / **Set agent** / multi-policy switcher  
+9. **Refresh from chain** on activity + Solscan links  
+ 

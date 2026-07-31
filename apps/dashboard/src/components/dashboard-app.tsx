@@ -13,6 +13,18 @@ import {
   loadActivity,
   pushActivity,
 } from "@/lib/activity";
+import {
+  fetchChainActivity,
+  mergeActivity,
+} from "@/lib/chain-activity";
+import {
+  loadPolicies,
+  upsertPolicy,
+  removePolicy,
+  getActivePolicyAddress,
+  setActivePolicyAddress,
+  StoredPolicy,
+} from "@/lib/policies-store";
 import { STORAGE_KEYS, CLUSTER, PROGRAM_ID, RPC_URL } from "@/lib/config";
 import { shortKey } from "@/lib/format";
 import { WalletMultiButton } from "@/components/wallet-button";
@@ -20,6 +32,9 @@ import { StatusCard } from "@/components/status-card";
 import { CreatePolicyPanel } from "@/components/create-policy-panel";
 import { DepositPanel } from "@/components/deposit-panel";
 import { AuthorityControls } from "@/components/authority-controls";
+import { UpdatePolicyPanel } from "@/components/update-policy-panel";
+import { SetAgentPanel } from "@/components/set-agent-panel";
+import { PolicySwitcher } from "@/components/policy-switcher";
 import { ActivityFeed } from "@/components/activity-feed";
 import { AgentDemoPanel } from "@/components/agent-demo-panel";
 import { Button } from "@/components/ui/button";
@@ -28,18 +43,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Coins, RefreshCw, Shield } from "lucide-react";
-
-
 import { friendlyErrorMessage } from "@/lib/wallet-errors";
 
 export function DashboardApp() {
   const { client, connection, connected } = usePolicyKitClient();
   const wallet = useWallet();
 
-  // Agent + localStorage only after mount — avoids SSR/client keypair mismatch.
   const [mounted, setMounted] = useState(false);
   const [agent, setAgent] = useState<Keypair | null>(null);
   const [policy, setPolicy] = useState<PublicKey | null>(null);
+  const [policies, setPolicies] = useState<StoredPolicy[]>([]);
   const [spendMint, setSpendMint] = useState<PublicKey | null>(null);
   const [mintInput, setMintInput] = useState("");
   const [status, setStatus] = useState<PolicyStatus | null>(null);
@@ -50,15 +63,17 @@ export function DashboardApp() {
     msg: string;
   } | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [chainItems, setChainItems] = useState<ActivityItem[]>([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [loadingChain, setLoadingChain] = useState(false);
 
-  // Hydrate browser-only state after mount (agent keypair, policy, mint, activity)
   useEffect(() => {
     setAgent(getOrCreateDemoAgent());
     setActivity(loadActivity());
+    setPolicies(loadPolicies());
     try {
-      const p = localStorage.getItem(STORAGE_KEYS.policy);
-      if (p) setPolicy(new PublicKey(p));
+      const active = getActivePolicyAddress();
+      if (active) setPolicy(new PublicKey(active));
       const m = localStorage.getItem(STORAGE_KEYS.spendMint);
       if (m) {
         setSpendMint(new PublicKey(m));
@@ -117,12 +132,25 @@ export function DashboardApp() {
         setMintInput(s.spendMint.toBase58());
       }
     } catch (e: unknown) {
-      // Policy may not exist on this cluster
       console.warn(e);
     } finally {
       setLoadingStatus(false);
     }
   }, [client, policy, spendMint]);
+
+  const refreshChain = useCallback(async () => {
+    if (!connection || !policy) {
+      setChainItems([]);
+      return;
+    }
+    setLoadingChain(true);
+    try {
+      const items = await fetchChainActivity(connection, policy);
+      setChainItems(items);
+    } finally {
+      setLoadingChain(false);
+    }
+  }, [connection, policy]);
 
   useEffect(() => {
     refreshStatus();
@@ -131,9 +159,50 @@ export function DashboardApp() {
     return () => clearInterval(t);
   }, [refreshStatus, policy]);
 
-  function persistPolicy(pk: PublicKey) {
-    setPolicy(pk);
-    localStorage.setItem(STORAGE_KEYS.policy, pk.toBase58());
+  useEffect(() => {
+    refreshChain();
+  }, [refreshChain]);
+
+  const mergedActivity = mergeActivity(activity, chainItems);
+
+  function selectPolicy(address: string) {
+    try {
+      const pk = new PublicKey(address);
+      setPolicy(pk);
+      setActivePolicyAddress(address);
+      const stored = policies.find((p) => p.address === address);
+      if (stored?.spendMint) {
+        try {
+          const m = new PublicKey(stored.spendMint);
+          setSpendMint(m);
+          setMintInput(m.toBase58());
+          localStorage.setItem(STORAGE_KEYS.spendMint, stored.spendMint);
+        } catch {
+          /* ignore */
+        }
+      }
+      showOk(`Active policy ${shortKey(pk)}`);
+    } catch {
+      showError("Invalid policy address");
+    }
+  }
+
+  function loadPolicyInput(raw: string) {
+    try {
+      const pk = new PublicKey(raw.trim());
+      const entry: StoredPolicy = {
+        address: pk.toBase58(),
+        policyId: 0,
+        spendMint: spendMint?.toBase58() ?? "",
+        label: "Loaded",
+        createdAt: Math.floor(Date.now() / 1000),
+      };
+      setPolicies(upsertPolicy(entry));
+      setPolicy(pk);
+      showOk("Policy loaded");
+    } catch {
+      showError("Invalid policy address");
+    }
   }
 
   function persistMint(pk: PublicKey) {
@@ -177,16 +246,6 @@ export function DashboardApp() {
     }
   }
 
-  function loadPolicyInput(raw: string) {
-    try {
-      const pk = new PublicKey(raw.trim());
-      persistPolicy(pk);
-      showOk("Policy loaded");
-    } catch {
-      showError("Invalid policy address");
-    }
-  }
-
   return (
     <div className="relative min-h-screen bg-ink-950 bg-grid-faint bg-grid">
       <div className="pointer-events-none absolute inset-0 bg-radial-mint" />
@@ -202,7 +261,7 @@ export function DashboardApp() {
                 PolicyKit
               </p>
               <p className="text-[11px] uppercase tracking-[0.16em] text-mist-500">
-                Agent policy control
+                Agent policy control room
               </p>
             </div>
           </div>
@@ -216,7 +275,6 @@ export function DashboardApp() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Hero strip */}
         <section className="animate-fade-up">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-mist-100 sm:text-4xl">
             Make agents{" "}
@@ -226,9 +284,8 @@ export function DashboardApp() {
             — safely.
           </h1>
           <p className="mt-2 max-w-2xl text-balance text-sm text-mist-400 sm:text-base">
-            Create an on-chain policy, fund the vault, watch the agent succeed
-            under limits, then hit a clean rejection. Built for Colosseum
-            Eternal demos.
+            Create policies, fund vaults, update rules, rotate agents, and watch
+            clean on-chain rejections. Built for Colosseum Eternal demos.
           </p>
         </section>
 
@@ -236,17 +293,14 @@ export function DashboardApp() {
           <Card className="border-amber-500/20 bg-amber-500/5">
             <CardContent className="flex flex-col items-start gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-amber-400/90">
-                Connect Phantom or Solflare to create policies and run the
-                demo. Use a cluster where PolicyKit is deployed (
-                <span className="font-mono">{CLUSTER}</span>
-                ).
+                Connect Phantom or Solflare. Deploy PolicyKit on{" "}
+                <span className="font-mono">{CLUSTER}</span> first.
               </p>
               <WalletMultiButton />
             </CardContent>
           </Card>
         )}
 
-        {/* Status first */}
         <section className="animate-fade-up" style={{ animationDelay: "60ms" }}>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-mist-500">
@@ -255,7 +309,10 @@ export function DashboardApp() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => refreshStatus()}
+              onClick={() => {
+                refreshStatus();
+                refreshChain();
+              }}
               disabled={!policy || !client}
             >
               <RefreshCw
@@ -271,8 +328,20 @@ export function DashboardApp() {
           />
         </section>
 
-        {/* Setup row */}
         <section className="grid gap-4 lg:grid-cols-3">
+          <PolicySwitcher
+            policies={policies}
+            active={policy?.toBase58() ?? null}
+            onSelect={selectPolicy}
+            onLoadAddress={loadPolicyInput}
+            onRemove={(addr) => {
+              setPolicies(removePolicy(addr));
+              const next = loadPolicies()[0];
+              if (next) selectPolicy(next.address);
+              else setPolicy(null);
+            }}
+          />
+
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -311,58 +380,51 @@ export function DashboardApp() {
                   Active: {shortKey(spendMint, 6)}
                 </p>
               )}
-              <div className="space-y-1.5 border-t border-ink-700 pt-3">
-                <Label>Load existing policy</Label>
-                <Input
-                  placeholder="Policy PDA"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      loadPolicyInput((e.target as HTMLInputElement).value);
-                    }
-                  }}
-                />
-                <p className="text-[11px] text-mist-500">
-                  Press Enter to load. Agent:{" "}
-                  <span className="font-mono" suppressHydrationWarning>
-                    {mounted && agent
-                      ? shortKey(agent.publicKey, 4)
-                      : "…"}
-                  </span>
-                </p>
-              </div>
+              <p className="text-[11px] text-mist-500">
+                Demo agent:{" "}
+                <span className="font-mono" suppressHydrationWarning>
+                  {mounted && agent ? shortKey(agent.publicKey, 4) : "…"}
+                </span>
+              </p>
             </CardContent>
           </Card>
 
           {client && agent && (
-            <div className="lg:col-span-2">
-              <CreatePolicyPanel
-                client={client}
-                agentPubkey={agent.publicKey}
-                spendMint={spendMint}
-                busy={busy}
-                setBusy={setBusy}
-                onError={showError}
-                onActivity={(title, sig) => {
-                  setActivity(
-                    pushActivity({
-                      kind: "create",
-                      title,
-                      signature: sig,
-                      success: true,
-                    })
-                  );
-                  showOk(title);
-                }}
-                onCreated={(pk) => {
-                  persistPolicy(pk);
-                  refreshStatus();
-                }}
-              />
-            </div>
+            <CreatePolicyPanel
+              client={client}
+              agentPubkey={agent.publicKey}
+              spendMint={spendMint}
+              busy={busy}
+              setBusy={setBusy}
+              onError={showError}
+              onActivity={(title, sig) => {
+                setActivity(
+                  pushActivity({
+                    kind: "create",
+                    title,
+                    signature: sig,
+                    success: true,
+                  })
+                );
+                showOk(title);
+              }}
+              onCreated={(pk, policyId) => {
+                const entry: StoredPolicy = {
+                  address: pk.toBase58(),
+                  policyId,
+                  spendMint: spendMint?.toBase58() ?? "",
+                  label: "Created",
+                  createdAt: Math.floor(Date.now() / 1000),
+                };
+                setPolicies(upsertPolicy(entry));
+                setPolicy(pk);
+                refreshStatus();
+                refreshChain();
+              }}
+            />
           )}
         </section>
 
-        {/* Controls + deposit + demo */}
         {client && agent && (
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
@@ -374,6 +436,7 @@ export function DashboardApp() {
                 setBusy={setBusy}
                 onDone={() => {
                   refreshStatus();
+                  refreshChain();
                   showOk("Deposit confirmed");
                 }}
                 onError={showError}
@@ -397,12 +460,61 @@ export function DashboardApp() {
                 setBusy={setBusy}
                 onDone={() => {
                   refreshStatus();
+                  refreshChain();
                 }}
                 onError={showError}
                 onActivity={(title, sig) => {
                   setActivity(
                     pushActivity({
                       kind: "pause",
+                      title,
+                      signature: sig,
+                      success: true,
+                    })
+                  );
+                }}
+              />
+              <UpdatePolicyPanel
+                client={client}
+                policy={policy}
+                status={status}
+                busy={busy}
+                setBusy={setBusy}
+                onDone={() => {
+                  refreshStatus();
+                  refreshChain();
+                  showOk("Policy updated");
+                }}
+                onError={showError}
+                onActivity={(title, sig) => {
+                  setActivity(
+                    pushActivity({
+                      kind: "update",
+                      title,
+                      signature: sig,
+                      success: true,
+                    })
+                  );
+                }}
+              />
+              <SetAgentPanel
+                client={client}
+                policy={policy}
+                status={status}
+                demoAgent={agent}
+                busy={busy}
+                setBusy={setBusy}
+                onAgentChange={setAgent}
+                onDone={() => {
+                  refreshStatus();
+                  refreshChain();
+                  showOk("Agent rotated");
+                }}
+                onError={showError}
+                onActivity={(title, sig) => {
+                  setActivity(
+                    pushActivity({
+                      kind: "set_agent",
                       title,
                       signature: sig,
                       success: true,
@@ -418,7 +530,10 @@ export function DashboardApp() {
               agent={agent}
               busy={busy}
               setBusy={setBusy}
-              onDone={() => refreshStatus()}
+              onDone={() => {
+                refreshStatus();
+                refreshChain();
+              }}
               onError={showError}
               onActivity={recordActivity}
             />
@@ -427,7 +542,11 @@ export function DashboardApp() {
 
         <section className="grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3">
-            <ActivityFeed items={activity} />
+            <ActivityFeed
+              items={mergedActivity}
+              onRefreshChain={refreshChain}
+              refreshing={loadingChain}
+            />
           </div>
           <Card className="lg:col-span-2">
             <CardHeader>
@@ -435,13 +554,16 @@ export function DashboardApp() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-mist-400">
               <Step n={1} text="Connect wallet on the right cluster" />
-              <Step n={2} text="Create demo mint (or paste USDC mint)" />
+              <Step n={2} text="Create demo mint (or paste mint)" />
               <Step n={3} text="Create Conservative trading policy" />
               <Step n={4} text="Deposit into the vault" />
-              <Step n={5} text="Run “success → fail sequence”" />
-              <Step n={6} text="Show remaining budget + Solscan links" />
+              <Step n={5} text="Allowed spend → Drift / outsider / over limit" />
+              <Step n={6} text="Update limits or rotate agent" />
+              <Step n={7} text="Refresh activity from chain + Solscan" />
               <div className="mt-4 rounded-lg border border-ink-600 bg-ink-950/50 p-3 font-mono text-[11px] text-mist-500">
-                <div>RPC: {RPC_URL.replace(/^https?:\/\//, "").slice(0, 40)}</div>
+                <div>
+                  RPC: {RPC_URL.replace(/^https?:\/\//, "").slice(0, 40)}
+                </div>
                 <div>Program: {shortKey(PROGRAM_ID, 6)}</div>
               </div>
             </CardContent>
