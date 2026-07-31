@@ -18,7 +18,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # solana-agent-kit (workspace peer via agent-kit-plugin) requires Node >= 22
+          node-version: "22"
           cache: yarn
 
       - name: Install dependencies
@@ -38,21 +39,46 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: yarn
+
+      # cargo install of anchor-cli / solana-related crates need udev headers on Ubuntu runners
+      - name: Install system dependencies (libudev for Anchor CLI)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            build-essential \
+            libudev-dev \
+            libssl-dev \
+            protobuf-compiler
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install Solana CLI
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
 
-      - name: Install Anchor 0.32.1
+      - name: Install Anchor 0.32.1 via AVM
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 anchor-cli --locked --force
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.32.1 avm --locked --force
+          avm install 0.32.1
+          avm use 0.32.1
+          echo "$HOME/.avm/bin" >> "$GITHUB_PATH"
           anchor --version
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      # Anchor.toml provider.wallet defaults to ~/.config/solana/id.json
+      - name: Create Solana test keypair
+        run: |
+          mkdir -p "$HOME/.config/solana"
+          solana-keygen new --no-bip39-passphrase -o "$HOME/.config/solana/id.json" --force
+          solana config set --url localhost
+          solana-keygen pubkey "$HOME/.config/solana/id.json"
 
       - name: Build program
         run: anchor build
@@ -71,7 +97,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: yarn
 
       - name: Install dependencies
