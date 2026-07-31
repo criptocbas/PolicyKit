@@ -9,6 +9,7 @@ import { PublicPolicyView } from "@/components/public-policy-view";
 import { fetchPublicPolicy } from "@/lib/readonly-client";
 import { CLUSTER, PROGRAM_ID } from "@/lib/config";
 import { shortKey } from "@/lib/format";
+import { walletClusterHint } from "@/lib/cluster-copy";
 import Link from "next/link";
 import { Shield } from "lucide-react";
 
@@ -19,14 +20,21 @@ export default function PublicPolicyPage() {
   const [vaultBalance, setVaultBalance] = useState<BN | null>(null);
   const [maxDamage, setMaxDamage] = useState<MaxDamageReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         new PublicKey(address);
       } catch {
-        setError("Invalid policy address");
+        if (!cancelled) {
+          setError("Invalid policy address (need a base58 Solana pubkey).");
+          setStatus(null);
+          setMaxDamage(null);
+          setLoading(false);
+        }
         return;
       }
       try {
@@ -38,11 +46,16 @@ export default function PublicPolicyPage() {
         setError(null);
       } catch (e: unknown) {
         if (cancelled) return;
+        setStatus(null);
+        setMaxDamage(null);
+        setVaultBalance(null);
         setError(
           e instanceof Error
             ? e.message
-            : "Failed to load policy (wrong cluster or not found)"
+            : `Failed to load policy on ${CLUSTER}. ${walletClusterHint()}`
         );
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -70,7 +83,7 @@ export default function PublicPolicyPage() {
         </h1>
         <p className="text-sm text-mist-400">
           Open on-chain policy for Solana agents. If the hot key is stolen,
-          damage is limited by these rules.
+          damage is limited by these rules. No wallet required.
         </p>
         <PublicPolicyView
           address={address}
@@ -78,11 +91,14 @@ export default function PublicPolicyPage() {
           vaultBalance={vaultBalance}
           maxDamage={maxDamage}
           error={error}
+          loading={loading}
         />
         <p className="text-center text-xs text-mist-500">
           <Link href="/" className="text-mint-400 hover:underline">
             Open control room
           </Link>
+          {" · "}
+          Reads <span className="font-mono">{CLUSTER}</span> only
         </p>
       </main>
     </div>
