@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { shortKey, toUiAmount } from "@/lib/format";
 import { solscanAddress } from "@/lib/solscan";
 import { formatMaxDamageLines } from "@/lib/max-damage-format";
+import { CLUSTER } from "@/lib/config";
+import { walletClusterHint } from "@/lib/cluster-copy";
 import { ExternalLink, ShieldAlert } from "lucide-react";
+import Link from "next/link";
 
 export function PublicPolicyView({
   address,
@@ -15,24 +18,46 @@ export function PublicPolicyView({
   vaultBalance,
   maxDamage,
   error,
+  loading,
 }: {
   address: string;
   status: PolicyStatus | null;
   vaultBalance: BN | null;
   maxDamage: MaxDamageReport | null;
   error?: string | null;
+  loading?: boolean;
 }) {
   if (error) {
     return (
       <Card className="border-coral-500/30">
-        <CardContent className="py-8 text-sm text-coral-400">{error}</CardContent>
+        <CardHeader>
+          <CardTitle className="text-coral-300">Could not load policy</CardTitle>
+          <CardDescription className="text-mist-400">
+            App is fixed to <span className="font-mono">{CLUSTER}</span>.{" "}
+            {walletClusterHint()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-coral-400">{error}</p>
+          <p className="text-mist-500">
+            Try loading a known devnet policy from the control room live-proof
+            card, or open{" "}
+            <Link href="/" className="text-mint-400 hover:underline">
+              control room
+            </Link>
+            .
+          </p>
+        </CardContent>
       </Card>
     );
   }
-  if (!status || !maxDamage) {
+
+  if (loading || !status || !maxDamage) {
     return (
       <Card>
-        <CardContent className="py-8 text-sm text-mist-500">Loading policy…</CardContent>
+        <CardContent className="py-8 text-sm text-mist-500">
+          Loading policy from {CLUSTER}…
+        </CardContent>
       </Card>
     );
   }

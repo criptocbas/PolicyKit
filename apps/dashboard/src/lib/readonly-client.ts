@@ -1,7 +1,12 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
-import { PolicyKitClient, computeMaxDamage, type MaxDamageReport } from "@policykit/sdk";
+import {
+  PolicyKitClient,
+  computeMaxDamage,
+  type MaxDamageReport,
+} from "@policykit/sdk";
 import { PROGRAM_ID, RPC_URL } from "./config";
+import { policyLoadErrorCopy } from "./cluster-copy";
 
 /** Read-only PolicyKit client (no wallet) for public pages. */
 export function createReadonlyClient(
@@ -24,10 +29,14 @@ export function createReadonlyClient(
 }
 
 export async function fetchPublicPolicy(address: string) {
-  const { client } = createReadonlyClient();
-  const policy = new PublicKey(address);
-  const status = await client.getPolicyStatus(policy);
-  const vaultBalance = await client.getVaultBalance(policy, status.spendMint);
-  const maxDamage: MaxDamageReport = computeMaxDamage(status.policy);
-  return { status, vaultBalance, maxDamage };
+  try {
+    const { client } = createReadonlyClient();
+    const policy = new PublicKey(address);
+    const status = await client.getPolicyStatus(policy);
+    const vaultBalance = await client.getVaultBalance(policy, status.spendMint);
+    const maxDamage: MaxDamageReport = computeMaxDamage(status.policy);
+    return { status, vaultBalance, maxDamage };
+  } catch (e: unknown) {
+    throw new Error(policyLoadErrorCopy(e));
+  }
 }

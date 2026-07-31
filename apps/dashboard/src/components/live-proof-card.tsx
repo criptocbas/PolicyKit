@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Radio } from "lucide-react";
+import Link from "next/link";
 import { shortKey } from "@/lib/format";
+import { CLUSTER } from "@/lib/config";
 
 export type DevnetProof = {
   cluster: string;
@@ -83,19 +85,31 @@ export function LiveProofCard({
               Live proof (devnet)
             </CardTitle>
             <CardDescription>
-              Public on-chain run from <code className="text-mist-400">yarn demo:devnet</code>.
+              Public on-chain run from{" "}
+              <code className="text-mist-400">yarn demo:devnet</code>. App
+              cluster: <span className="font-mono">{CLUSTER}</span>.
             </CardDescription>
           </div>
-          {proof && <Badge variant="success">devnet</Badge>}
+          {proof && (
+            <Badge variant="success">{proof.cluster || "devnet"}</Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         {loading && <p className="text-mist-500">Loading proof…</p>}
         {!loading && error && (
-          <p className="text-mist-500">
-            {error}. Generate with{" "}
-            <code className="text-mist-300">yarn demo:devnet</code>.
-          </p>
+          <div className="space-y-1 text-mist-500">
+            <p>{error}</p>
+            <p className="text-xs">
+              Generate with{" "}
+              <code className="text-mist-300">yarn demo:devnet</code>, then
+              ensure{" "}
+              <code className="text-mist-300">
+                apps/dashboard/public/proof/devnet-latest.json
+              </code>{" "}
+              is present.
+            </p>
+          </div>
         )}
         {proof && (
           <>
@@ -162,15 +176,23 @@ export function LiveProofCard({
                 </Badge>
               )}
             </div>
-            {onLoadPolicy && (
-              <Button
-                className="w-full"
-                size="sm"
-                onClick={() => onLoadPolicy(proof.policy, proof.spendMint)}
+            <div className="flex flex-col gap-2 pt-1">
+              <Link
+                href={`/p/${proof.policy}`}
+                className="inline-flex w-full items-center justify-center rounded-lg border border-coral-500/30 bg-coral-500/10 px-3 py-2 text-sm font-medium text-coral-200 hover:bg-coral-500/15"
               >
-                Load this policy in control room
-              </Button>
-            )}
+                Open public max-damage page →
+              </Link>
+              {onLoadPolicy && (
+                <Button
+                  className="w-full"
+                  size="sm"
+                  onClick={() => onLoadPolicy(proof.policy, proof.spendMint)}
+                >
+                  Load this policy in control room
+                </Button>
+              )}
+            </div>
           </>
         )}
       </CardContent>

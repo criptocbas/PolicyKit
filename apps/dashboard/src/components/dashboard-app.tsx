@@ -25,7 +25,12 @@ import {
   setActivePolicyAddress,
   StoredPolicy,
 } from "@/lib/policies-store";
-import { STORAGE_KEYS, CLUSTER, PROGRAM_ID, RPC_URL } from "@/lib/config";
+import { STORAGE_KEYS, CLUSTER, PROGRAM_ID } from "@/lib/config";
+import {
+  connectWalletBanner,
+  shortRpc,
+  walletClusterHint,
+} from "@/lib/cluster-copy";
 import { shortKey } from "@/lib/format";
 import { WalletMultiButton } from "@/components/wallet-button";
 import { StatusCard } from "@/components/status-card";
@@ -294,13 +299,22 @@ export function DashboardApp() {
         {!connected && (
           <Card className="border-amber-500/20 bg-amber-500/5">
             <CardContent className="flex flex-col items-start gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-amber-400/90">
-                Connect Phantom or Solflare. Deploy PolicyKit on{" "}
-                <span className="font-mono">{CLUSTER}</span> first.
-              </p>
+              <div className="space-y-1 text-sm text-amber-400/90">
+                <p>{connectWalletBanner(CLUSTER)}</p>
+                <p className="text-xs text-amber-500/80">
+                  Public max-damage pages work without a wallet. Control-room
+                  writes need a funded {CLUSTER} wallet.
+                </p>
+              </div>
               <WalletMultiButton />
             </CardContent>
           </Card>
+        )}
+        {connected && (
+          <p className="text-xs text-mist-500">
+            Connected · app RPC <span className="font-mono">{shortRpc()}</span>{" "}
+            ({CLUSTER}). {walletClusterHint(CLUSTER)}
+          </p>
         )}
 
         <section className="animate-fade-up" style={{ animationDelay: "60ms" }}>
@@ -570,18 +584,20 @@ export function DashboardApp() {
               <CardTitle>Demo checklist</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-mist-400">
-              <Step n={1} text="Connect wallet on the right cluster" />
+              <Step
+                n={1}
+                text={`Connect wallet on ${CLUSTER} (${walletClusterHint(CLUSTER)})`}
+              />
               <Step n={2} text="Create demo mint (or paste mint)" />
               <Step n={3} text="Create Conservative trading policy" />
               <Step n={4} text="Deposit into the vault" />
               <Step n={5} text="Allowed spend → Drift / outsider / over limit" />
-              <Step n={6} text="Update limits or rotate agent" />
-              <Step n={7} text="Refresh activity from chain + Solscan" />
+              <Step n={6} text="Open public max-damage page from status card" />
+              <Step n={7} text="Show live adversary ticks + live proof cards" />
               <div className="mt-4 rounded-lg border border-ink-600 bg-ink-950/50 p-3 font-mono text-[11px] text-mist-500">
-                <div>
-                  RPC: {RPC_URL.replace(/^https?:\/\//, "").slice(0, 40)}
-                </div>
+                <div>RPC: {shortRpc()}</div>
                 <div>Program: {shortKey(PROGRAM_ID, 6)}</div>
+                <div>Cluster: {CLUSTER}</div>
               </div>
             </CardContent>
           </Card>

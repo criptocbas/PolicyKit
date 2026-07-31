@@ -220,10 +220,15 @@ export function StatusCard({
           </p>
           <Link
             href={`/p/${status.address.toBase58()}`}
-            className="mt-2 inline-block text-mint-400 hover:underline"
+            className="mt-2 inline-flex items-center gap-1 font-medium text-mint-400 hover:underline"
+            target="_blank"
+            rel="noreferrer"
           >
             Open public max-damage page →
           </Link>
+          <p className="mt-1 text-[10px] text-mist-500">
+            Shareable URL — no wallet required (same cluster as this app).
+          </p>
         </div>
       </CardContent>
     </Card>
