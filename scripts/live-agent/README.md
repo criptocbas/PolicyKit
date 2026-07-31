@@ -12,8 +12,21 @@ yarn agent:setup
 Creates:
 
 - `proof/.agent-keypair.json` — **gitignored** agent secret
-- `proof/live-config.json` — public addresses (committed optional)
+- `proof/live-config.json` — public addresses (safe to commit)
 - Funded policy vault on devnet
+
+### Prerequisites / blockers
+
+| Need | Why |
+|------|-----|
+| Authority key with **devnet SOL** | Pays setup + ATA rent (`AUTHORITY_KEY`, default `~/.config/solana/id.json`) |
+| Devnet RPC reachable | Default `https://api.devnet.solana.com` (rate limits → retries in tick) |
+| `yarn build:packages` | `agent:setup` / `agent:tick` run this first |
+| Agent key on disk | After setup: `proof/.agent-keypair.json` (or `AGENT_KEY`) |
+
+If `proof/live-config.json` is missing → run setup.  
+If agent pubkey ≠ `live-config.agent` → tick warns; re-run setup or point `AGENT_KEY` at the correct file.  
+If daily budget exhausted → allowed spend becomes `skip_budget` (still exit 0 — **bounding works**).
 
 ## Tick
 
@@ -29,14 +42,37 @@ Each tick:
 
 Updates `proof/live-feed.json` and `apps/dashboard/public/proof/live-feed.json`.
 
-## Schedule (cron)
+### Verified (devnet)
+
+| Check | Result |
+|-------|--------|
+| `yarn agent:tick` | **OK** — allowed + ProgramNotAllowed + DestinationNotAllowed |
+| Policy | `GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n` (see `proof/live-config.json`) |
+| Keys committed | **No** — `proof/.agent-keypair.json` gitignored (`**/.agent-keypair.json`) |
+
+## Schedule (local cron — preferred)
 
 ```cron
 # Every 6 hours
 0 */6 * * * cd /path/to/PolicyKit && /usr/bin/yarn agent:tick >> /tmp/policykit-tick.log 2>&1
 ```
 
-Do **not** put mainnet keys in GitHub Actions. Prefer local cron with a throwaway devnet agent key.
+Do **not** put mainnet keys in GitHub Actions. Prefer local cron with a throwaway **devnet-only** agent key.
+
+## GHA design note (not implemented — needs EngLead OK)
+
+If we add a scheduled workflow later:
+
+| Choice | Recommendation |
+|--------|----------------|
+| Trigger | `schedule: cron: '0 */6 * * *'` + `workflow_dispatch` |
+| Secrets | `AGENT_SECRET` (JSON byte array) and optional `RPC_URL` only — **never** authority clawback key |
+| Scope | **devnet only**; hard-fail if `cluster != devnet` |
+| Steps | checkout → Node 22 → yarn install → write agent key from secret → `yarn agent:tick` → commit `proof/live-feed.json` via bot token **or** upload artifact only |
+| Risk | Public repo + agent secret = bounded drain of **demo vault only**; still a secret leak surface |
+| Safer default | Keep **local/systemd cron** for Eternal; use GHA only if feed must update without a laptop |
+
+**Do not implement the workflow until EngLead approves** secrets + auto-commit policy.
 
 ## Env
 
