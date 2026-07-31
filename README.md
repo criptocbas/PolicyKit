@@ -17,8 +17,9 @@ Built for Colosseum Eternal. Evolution of the X402Guard pattern into a general p
 - [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)  
 - [x] **Phase A (quality)** — CI, unit tests, threat model, error catalog, architecture docs  
 - [x] **Phase B (product depth)** — dashboard control room, chain activity, destination owner allowlist  
+- [x] **Phase C (live proof)** — devnet deploy, `yarn demo:devnet`, public proof JSON + dashboard card  
 
-MVP + control room + destination allowlist. Next: public proof (devnet agent) / distribution — not stack rewrites.
+MVP + control room + **live on Solana devnet**. See [docs/DEVNET.md](./docs/DEVNET.md).
 
 ## Docs
 
@@ -66,6 +67,16 @@ yarn build:dashboard
 ```
 
 Or: `yarn ci:local` (typecheck + unit + integration).
+
+### Devnet live proof (Phase C)
+
+```bash
+yarn deploy:devnet    # upgrade program (needs SOL + upgrade authority)
+yarn demo:devnet      # mint + policy + success/fail txs → proof/*.json
+yarn dev:dashboard    # load Live proof card → “Load this policy”
+```
+
+Details: [docs/DEVNET.md](./docs/DEVNET.md).
 
 ### Dependency pins (platform-tools rustc 1.84)
 

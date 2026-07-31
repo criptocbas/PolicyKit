@@ -77,3 +77,4 @@ Documented in [PROGRAM_DESIGN.md](./PROGRAM_DESIGN.md): hierarchical policies, T
 - [SECURITY.md](./SECURITY.md) — invariants  
 - [THREAT_MODEL.md](./THREAT_MODEL.md) — threats and residuals  
 - [ERROR_CATALOG.md](./ERROR_CATALOG.md) — error codes  
+- [DEVNET.md](./DEVNET.md) — Phase C deploy + live proof 

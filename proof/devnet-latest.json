@@ -1,0 +1,33 @@
+{
+  "cluster": "devnet",
+  "rpcUrl": "https://api.devnet.solana.com",
+  "programId": "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27",
+  "policy": "9ftWyiCLDqZfdazKpAyMdUdEVz92HzihmMnpkanC7UXP",
+  "policyId": 785535387,
+  "spendMint": "imS6Dye6fnSxRDbUYraSR4KJZBtHazT8XVbsv7JyicE",
+  "agent": "41p8hbZEf7xsJxpYqEurJK7VVis5qLnZVVTiXHNgy5Qp",
+  "authority": "B6MtVeqn7BrJ8HTX6CeP8VugNWyCqqbfcDMxYBknzPt7",
+  "createdAt": "2026-07-31T22:03:18.026Z",
+  "signatures": {
+    "create": "c413zHbT4Ry23zeeo4XAoPptVNZ4Bh7mYVg5PHX5i5HTNQtPxsnzWeZiAQitc8C25npPoiEK5F1qqLBSBNRmrGz",
+    "deposit": "3bErZMwQ9WHhuUXqbK6p22oDPBiQhEpVRgfmci1srWMjQYHTLTDGc4j5BUcbjh2GfcxrK4EkG7PYicSXGf1jjan1",
+    "successSpend": "5uLuJT1sFtgz7ff7viaZRiydSRSsB6TLyyW7en1TopTrjGVWeg9fYqDiGuod8UcyJRFk5Utz2P7wYemEXfYtba9o"
+  },
+  "rejections": {
+    "programNotAllowed": {
+      "name": "ProgramNotAllowed",
+      "title": "Program not allowed"
+    },
+    "destinationNotAllowed": {
+      "name": "DestinationNotAllowed",
+      "title": "Destination not allowed"
+    }
+  },
+  "remainingDaily": "45000000",
+  "spentToday": "5000000",
+  "explorer": {
+    "policy": "https://solscan.io/account/9ftWyiCLDqZfdazKpAyMdUdEVz92HzihmMnpkanC7UXP?cluster=devnet",
+    "program": "https://solscan.io/account/AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27?cluster=devnet",
+    "successTx": "https://solscan.io/tx/5uLuJT1sFtgz7ff7viaZRiydSRSsB6TLyyW7en1TopTrjGVWeg9fYqDiGuod8UcyJRFk5Utz2P7wYemEXfYtba9o?cluster=devnet"
+  }
+}

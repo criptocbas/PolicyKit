@@ -18,7 +18,9 @@
     "ci:local": "yarn typecheck:packages && yarn test:unit && yarn test:integration",
     "build:dashboard": "yarn build:packages && yarn workspace @policykit/dashboard build",
     "dev:dashboard": "yarn workspace @policykit/dashboard dev",
-    "build": "yarn build:packages && yarn workspace @policykit/dashboard build"
+    "build": "yarn build:packages && yarn workspace @policykit/dashboard build",
+    "deploy:devnet": "bash scripts/deploy-devnet.sh",
+    "demo:devnet": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/devnet-live-demo.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-31
+
+### Added
+
+- Phase C live proof: `yarn deploy:devnet`, `yarn demo:devnet`, `docs/DEVNET.md`.
+- Public proof JSON (`proof/devnet-latest.json`, dashboard `/proof/devnet-latest.json`).
+- Dashboard **Live proof** card with Solscan links and one-click policy load.
+
 ## [0.2.0] - 2026-07-31
 
 ### Added
