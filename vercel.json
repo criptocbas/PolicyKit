@@ -1,0 +1,6 @@
+{
+  "buildCommand": "yarn build:packages && yarn workspace @policykit/dashboard build",
+  "installCommand": "yarn install",
+  "framework": "nextjs",
+  "outputDirectory": "apps/dashboard/.next"
+}

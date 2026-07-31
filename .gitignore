@@ -11,6 +11,8 @@ test-ledger
 .yarn/install-state.gz
 dist
 packages/*/dist
+apps/*/.next
+apps/*/out
 .idea
 .vscode
 *.log

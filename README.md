@@ -12,16 +12,17 @@ Built for Colosseum Eternal. Evolution of the X402Guard pattern into a general p
 - [x] Rules: per-tx + daily spend, program allow/deny, mint allowlist, rate limit, expiry  
 - [x] Events + distinct error codes + integration tests  
 - [x] **Phase 2** — TypeScript SDK (`@policykit/sdk`) + Solana Agent Kit plugin  
-- [ ] **Phase 3** — Dashboard  
+- [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)
 
 ## Repo layout
 
 ```
-programs/policykit/     # Anchor program
-packages/sdk/           # @policykit/sdk — typed client
-packages/agent-kit-plugin/  # @policykit/agent-kit-plugin
-tests/                  # Program + SDK/plugin integration tests
-docs/                   # PROGRAM_DESIGN.md, SECURITY.md
+programs/policykit/          # Anchor program
+packages/sdk/                # @policykit/sdk — typed client
+packages/agent-kit-plugin/   # @policykit/agent-kit-plugin
+apps/dashboard/              # Next.js 15 demo dashboard
+tests/                       # Program + SDK/plugin integration tests
+docs/                        # PROGRAM_DESIGN.md, SECURITY.md
 ```
 
 ## Quick start
@@ -31,6 +32,7 @@ docs/                   # PROGRAM_DESIGN.md, SECURITY.md
 yarn install
 anchor build
 anchor test
+yarn dev:dashboard    # http://localhost:3000
 ```
 
 ### Dependency pins (platform-tools rustc 1.84)
@@ -179,6 +181,29 @@ Vault  = ATA(Policy, mint)   // created client-side (SDK deposit does this)
 ```
 
 Program ID (local/devnet keypair in repo): `4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu`
+
+## Dashboard (Phase 3)
+
+Demo-first control room for judges and weekly videos.
+
+```bash
+yarn dev:dashboard
+# production / Vercel check:
+yarn build:dashboard
+```
+
+| UI | Purpose |
+|----|---------|
+| Status card | Remaining daily budget, actions left, Active/Paused/Expired |
+| Create policy | Three SDK templates + editable limits |
+| Fund vault | Deposit into policy ATA |
+| Authority | Pause / Unpause / Clawback |
+| Agent demo | Success (Jupiter) → fail (**Program not allowed** / **Over daily budget**) |
+| Activity | Recent actions + Solscan links |
+
+Configure `apps/dashboard/.env.local` (see `apps/dashboard/.env.example`). Deploy PolicyKit to the same cluster as `NEXT_PUBLIC_RPC_URL`.
+
+Details: [apps/dashboard/README.md](apps/dashboard/README.md).
 
 ## SDK surface (`@policykit/sdk`)
 

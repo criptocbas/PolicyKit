@@ -3,13 +3,17 @@
   "private": true,
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "build:packages": "yarn workspace @policykit/sdk build && yarn workspace @policykit/agent-kit-plugin build",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "test": "yarn build:packages && anchor test"
+    "test": "yarn build:packages && anchor test",
+    "build:dashboard": "yarn build:packages && yarn workspace @policykit/dashboard build",
+    "dev:dashboard": "yarn workspace @policykit/dashboard dev",
+    "build": "yarn build:packages && yarn workspace @policykit/dashboard build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
