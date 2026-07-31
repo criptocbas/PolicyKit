@@ -27,3 +27,4 @@ proof/.agent-keypair.json
 # OS
 Thumbs.db
 .superpowers/
+.worktrees/
