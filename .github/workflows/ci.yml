@@ -72,6 +72,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      # Anchor.toml provider.wallet defaults to ~/.config/solana/id.json
+      - name: Create Solana test keypair
+        run: |
+          mkdir -p "$HOME/.config/solana"
+          solana-keygen new --no-bip39-passphrase -o "$HOME/.config/solana/id.json" --force
+          solana config set --url localhost
+          solana-keygen pubkey "$HOME/.config/solana/id.json"
+
       - name: Build program
         run: anchor build
 
