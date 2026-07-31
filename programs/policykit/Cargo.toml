@@ -1,0 +1,32 @@
+[package]
+name = "policykit"
+version = "0.1.0"
+description = "PolicyKit — open Solana-native on-chain policy engine for AI agents"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "policykit"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+# Do not enable anchor-spl/idl-build: it requires token_2022 (and thus zk-sdk /
+# edition2024) which breaks platform-tools 1.48. Program IDL still builds via
+# anchor-lang for our accounts and instruction args.
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+# Direct spl-token (no anchor-spl): avoids token_2022 / zk-sdk edition2024
+# breakage on platform-tools rustc 1.84, and keeps IDL build clean.
+spl-token = { version = "8", features = ["no-entrypoint"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

@@ -1,0 +1,23 @@
+.anchor
+.DS_Store
+target
+**/*.rs.bk
+node_modules
+test-ledger
+.yarn
+
+# Build / lock noise
+.yarn/cache
+.yarn/install-state.gz
+dist
+.idea
+.vscode
+*.log
+
+# Key material (never commit)
+**/id.json
+**/*-keypair.json
+!target/deploy/.gitkeep
+
+# OS
+Thumbs.db
