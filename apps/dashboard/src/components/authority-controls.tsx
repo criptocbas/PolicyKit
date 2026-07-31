@@ -11,10 +11,7 @@ import { fromUiAmount } from "@/lib/format";
 import { Pause, Play, Undo2 } from "lucide-react";
 
 
-function errMsg(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
-}
+import { friendlyErrorMessage } from "@/lib/wallet-errors";
 
 export function AuthorityControls({
   client,
@@ -47,7 +44,7 @@ export function AuthorityControls({
       onActivity("Policy paused", sig);
       onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -61,7 +58,7 @@ export function AuthorityControls({
       onActivity("Policy unpaused", sig);
       onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -79,7 +76,7 @@ export function AuthorityControls({
       onActivity(`Clawback ${clawbackAmt}`, sig);
       onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }

@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::constants::POLICY_SEED;
+use crate::error::PolicyKitError;
 use crate::events::PolicyCreated;
 use crate::state::{CreatePolicyParams, Policy};
 
@@ -10,6 +11,7 @@ use crate::state::{CreatePolicyParams, Policy};
 /// - `authority` is the sole creator and stored owner (must sign).
 /// - PDA seeds bind policy to `(authority, policy_id)` — no shared vaults.
 /// - `init` prevents reinitialization.
+/// - Agent must not be the default pubkey (same rule as `set_agent`).
 /// - Params validated (list sizes, rate window, expiry).
 pub fn create_policy_handler(
     ctx: Context<CreatePolicy>,
@@ -17,6 +19,11 @@ pub fn create_policy_handler(
     params: CreatePolicyParams,
 ) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
+
+    require!(
+        params.agent != Pubkey::default(),
+        PolicyKitError::InvalidAgent
+    );
 
     Policy::validate_lists_and_windows(
         params.program_allowlist_enabled,

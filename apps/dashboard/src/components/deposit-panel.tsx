@@ -10,10 +10,7 @@ import { Label } from "@/components/ui/label";
 import { fromUiAmount } from "@/lib/format";
 
 
-function errMsg(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
-}
+import { friendlyErrorMessage } from "@/lib/wallet-errors";
 
 export function DepositPanel({
   client,
@@ -51,7 +48,7 @@ export function DepositPanel({
       onActivity(`Deposited ${amount} into vault`, sig);
       onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PolicyStatus } from "@policykit/sdk";
 import BN from "bn.js";
@@ -30,16 +30,15 @@ import { Badge } from "@/components/ui/badge";
 import { Coins, RefreshCw, Shield } from "lucide-react";
 
 
-function errMsg(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
-}
+import { friendlyErrorMessage } from "@/lib/wallet-errors";
 
 export function DashboardApp() {
   const { client, connection, connected } = usePolicyKitClient();
   const wallet = useWallet();
 
-  const [agent] = useState(() => getOrCreateDemoAgent());
+  // Agent + localStorage only after mount — avoids SSR/client keypair mismatch.
+  const [mounted, setMounted] = useState(false);
+  const [agent, setAgent] = useState<Keypair | null>(null);
   const [policy, setPolicy] = useState<PublicKey | null>(null);
   const [spendMint, setSpendMint] = useState<PublicKey | null>(null);
   const [mintInput, setMintInput] = useState("");
@@ -53,8 +52,9 @@ export function DashboardApp() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
 
-  // Hydrate from localStorage
+  // Hydrate browser-only state after mount (agent keypair, policy, mint, activity)
   useEffect(() => {
+    setAgent(getOrCreateDemoAgent());
     setActivity(loadActivity());
     try {
       const p = localStorage.getItem(STORAGE_KEYS.policy);
@@ -67,6 +67,7 @@ export function DashboardApp() {
     } catch {
       /* ignore */
     }
+    setMounted(true);
   }, []);
 
   const showError = useCallback((msg: string) => {
@@ -160,7 +161,7 @@ export function DashboardApp() {
       );
       showOk(`Demo mint ${shortKey(mint)}`);
     } catch (e: unknown) {
-      showError(errMsg(e));
+      showError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -322,15 +323,17 @@ export function DashboardApp() {
                 />
                 <p className="text-[11px] text-mist-500">
                   Press Enter to load. Agent:{" "}
-                  <span className="font-mono">
-                    {shortKey(agent.publicKey, 4)}
+                  <span className="font-mono" suppressHydrationWarning>
+                    {mounted && agent
+                      ? shortKey(agent.publicKey, 4)
+                      : "…"}
                   </span>
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {client && (
+          {client && agent && (
             <div className="lg:col-span-2">
               <CreatePolicyPanel
                 client={client}
@@ -360,7 +363,7 @@ export function DashboardApp() {
         </section>
 
         {/* Controls + deposit + demo */}
-        {client && (
+        {client && agent && (
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <DepositPanel

@@ -66,7 +66,7 @@ The PolicyKit plugin **only** gates outflows from the **policy vault** via `exec
 - Token program: constrained to `spl_token::ID`
 - No `init_if_needed` on the Policy account; vault ATA is created client-side
 - Checked arithmetic on counters
-- `set_agent` rejects the default pubkey
+- `create_policy` and `set_agent` both reject the default pubkey as agent
 
 ## Known non-goals (MVP)
 

@@ -17,10 +17,7 @@ import { fromUiAmount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 
-function errMsg(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
-}
+import { friendlyErrorMessage } from "@/lib/wallet-errors";
 
 const TEMPLATE_META: Record<
   PolicyTemplateName,
@@ -68,9 +65,12 @@ export function CreatePolicyPanel({
   const [maxPerDay, setMaxPerDay] = useState("50");
   const [maxActions, setMaxActions] = useState("10");
   const [windowSeconds, setWindowSeconds] = useState("60");
-  const [policyId, setPolicyId] = useState(() =>
-    String(Math.floor(Date.now() / 1000) % 1_000_000)
-  );
+  // Stable default for SSR; set a unique id once on the client.
+  const [policyId, setPolicyId] = useState("1");
+
+  useEffect(() => {
+    setPolicyId(String(Math.floor(Date.now() / 1000) % 1_000_000));
+  }, []);
 
   // Sync editable fields when template changes
   useEffect(() => {
@@ -122,7 +122,7 @@ export function CreatePolicyPanel({
       onActivity(`Created policy #${id}`, signature);
       onCreated(policy, id);
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }

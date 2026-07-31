@@ -21,20 +21,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fromUiAmount } from "@/lib/format";
+import {
+  friendlyErrorMessage,
+  isWalletApprovalDenied,
+} from "@/lib/wallet-errors";
 import { CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-
-function errMsg(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
-}
 
 type DemoResult = {
   ok: boolean;
   title: string;
   message: string;
   signature?: string;
+  /** Soft cancel — not an on-chain policy rejection */
+  cancelled?: boolean;
 };
 
 export function AgentDemoPanel({
@@ -102,6 +102,20 @@ export function AgentDemoPanel({
     return ata;
   }
 
+  function applyResult(result: DemoResult) {
+    setLast(result);
+    if (!result.cancelled) {
+      setLog((l) => [result, ...l].slice(0, 8));
+    }
+    if (result.ok) {
+      onDone();
+    } else if (result.cancelled) {
+      onError(result.message);
+    } else {
+      onDone();
+    }
+  }
+
   async function runSpend(
     amountUi: string,
     intent: PublicKey,
@@ -110,8 +124,8 @@ export function AgentDemoPanel({
     if (!policy || !mint) {
       throw new Error("Create a policy and mint first.");
     }
-    const dest = await ensureAgentAta();
     try {
+      const dest = await ensureAgentAta();
       const sig = await client.executeSpend({
         policy,
         mint,
@@ -130,6 +144,14 @@ export function AgentDemoPanel({
       onActivity(result.title, sig, true, result.message);
       return result;
     } catch (e: unknown) {
+      if (isWalletApprovalDenied(e)) {
+        return {
+          ok: false,
+          cancelled: true,
+          title: "Cancelled",
+          message: "Transaction cancelled in wallet — nothing was sent.",
+        };
+      }
       const mapped =
         e instanceof PolicyKitError ? e.toJSON() : mapPolicyKitError(e);
       const title =
@@ -149,16 +171,11 @@ export function AgentDemoPanel({
   async function handleSuccess() {
     setBusy(true);
     try {
-      const result = await runSpend(
-        "5",
-        KNOWN_PROGRAMS.JUPITER_V6,
-        "Jupiter intent"
+      applyResult(
+        await runSpend("5", KNOWN_PROGRAMS.JUPITER_V6, "Jupiter intent")
       );
-      setLast(result);
-      setLog((l) => [result, ...l].slice(0, 8));
-      onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -167,16 +184,9 @@ export function AgentDemoPanel({
   async function handleForbidden() {
     setBusy(true);
     try {
-      const result = await runSpend(
-        "1",
-        KNOWN_PROGRAMS.DRIFT,
-        "Drift intent"
-      );
-      setLast(result);
-      setLog((l) => [result, ...l].slice(0, 8));
-      onDone();
+      applyResult(await runSpend("1", KNOWN_PROGRAMS.DRIFT, "Drift intent"));
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -185,17 +195,11 @@ export function AgentDemoPanel({
   async function handleOverBudget() {
     setBusy(true);
     try {
-      // Large amount → per-tx or daily rejection with exact PolicyKit title
-      const result = await runSpend(
-        "999999",
-        KNOWN_PROGRAMS.JUPITER_V6,
-        "Blow budget"
+      applyResult(
+        await runSpend("999999", KNOWN_PROGRAMS.JUPITER_V6, "Blow budget")
       );
-      setLast(result);
-      setLog((l) => [result, ...l].slice(0, 8));
-      onDone();
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -205,13 +209,23 @@ export function AgentDemoPanel({
     setBusy(true);
     try {
       const ok = await runSpend("5", KNOWN_PROGRAMS.JUPITER_V6, "Step 1");
+      if (ok.cancelled) {
+        applyResult(ok);
+        return;
+      }
       setLog((l) => [ok, ...l]);
       const bad = await runSpend("1", KNOWN_PROGRAMS.DRIFT, "Step 2");
       setLast(bad);
-      setLog((l) => [bad, ok, ...l].slice(0, 8));
-      onDone();
+      if (!bad.cancelled) {
+        setLog((l) => [bad, ok, ...l].slice(0, 8));
+      }
+      if (bad.cancelled) {
+        onError(bad.message);
+      } else {
+        onDone();
+      }
     } catch (e: unknown) {
-      onError(errMsg(e));
+      onError(friendlyErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -272,25 +286,45 @@ export function AgentDemoPanel({
               "rounded-xl border p-4 animate-fade-up",
               last.ok
                 ? "border-mint-500/30 bg-mint-500/10 shadow-glow"
-                : "border-coral-500/35 bg-coral-500/10 shadow-glow-coral"
+                : last.cancelled
+                  ? "border-amber-500/30 bg-amber-500/10"
+                  : "border-coral-500/35 bg-coral-500/10 shadow-glow-coral"
             )}
           >
             <div className="flex items-center gap-2">
               {last.ok ? (
                 <CheckCircle2 className="h-5 w-5 text-mint-400" />
               ) : (
-                <XCircle className="h-5 w-5 text-coral-400" />
+                <XCircle
+                  className={cn(
+                    "h-5 w-5",
+                    last.cancelled ? "text-amber-400" : "text-coral-400"
+                  )}
+                />
               )}
               <p
                 className={cn(
                   "font-display text-lg font-semibold tracking-tight",
-                  last.ok ? "text-mint-300" : "text-coral-400"
+                  last.ok
+                    ? "text-mint-300"
+                    : last.cancelled
+                      ? "text-amber-400"
+                      : "text-coral-400"
                 )}
               >
                 {last.title}
               </p>
-              <Badge variant={last.ok ? "success" : "danger"} className="ml-auto">
-                {last.ok ? "on-chain ok" : "on-chain reject"}
+              <Badge
+                variant={
+                  last.ok ? "success" : last.cancelled ? "warn" : "danger"
+                }
+                className="ml-auto"
+              >
+                {last.ok
+                  ? "on-chain ok"
+                  : last.cancelled
+                    ? "cancelled"
+                    : "on-chain reject"}
               </Badge>
             </div>
             <p className="mt-2 text-sm text-mist-300">{last.message}</p>

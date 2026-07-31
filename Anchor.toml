@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 policykit = "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu"
 
+[programs.devnet]
+policykit = "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

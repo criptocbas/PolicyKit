@@ -4,10 +4,15 @@ import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
 import { STORAGE_KEYS } from "./config";
 
-/** Load or create a persistent demo agent keypair (browser localStorage). */
+/**
+ * Load or create a persistent demo agent keypair (browser localStorage).
+ * Call only from client effects / event handlers — never during SSR render.
+ */
 export function getOrCreateDemoAgent(): Keypair {
   if (typeof window === "undefined") {
-    return Keypair.generate();
+    throw new Error(
+      "getOrCreateDemoAgent must only run in the browser (use useEffect)"
+    );
   }
   try {
     const existing = localStorage.getItem(STORAGE_KEYS.agentSecret);

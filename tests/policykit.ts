@@ -206,9 +206,22 @@ describe("policykit", () => {
   }
 
   function expectError(err: unknown, name: string) {
-    expect(err).to.be.instanceOf(AnchorError);
-    const e = err as AnchorError;
-    expect(e.error.errorCode.code).to.equal(name);
+    if (err instanceof AnchorError) {
+      expect(err.error.errorCode.code).to.equal(name);
+      return;
+    }
+    // Some simulation failures surface as SendTransactionError; recover Anchor code from logs.
+    const logs: string[] | undefined = (err as { logs?: string[] }).logs;
+    const parsed = logs ? AnchorError.parse(logs) : null;
+    if (parsed) {
+      expect(parsed.error.errorCode.code).to.equal(name);
+      return;
+    }
+    const blob = [
+      String((err as { message?: string }).message ?? err),
+      ...(logs ?? []),
+    ].join("\n");
+    expect(blob).to.include(name);
   }
 
   before(async () => {
@@ -596,6 +609,19 @@ describe("policykit", () => {
       expect.fail("should have failed");
     } catch (e) {
       expectError(e, "InvalidDestination");
+    }
+  });
+
+  it("rejects create_policy with the default public key as agent", async () => {
+    try {
+      // Unique id — 42 is used by the InvalidDestination case above.
+      await createPolicyWithParams(
+        new BN(142),
+        defaultCreateParams({ agent: PublicKey.default })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InvalidAgent");
     }
   });
 
