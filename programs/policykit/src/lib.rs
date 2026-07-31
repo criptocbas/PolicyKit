@@ -20,7 +20,7 @@ pub mod token_utils;
 use instructions::*;
 use state::{CreatePolicyParams, UpdatePolicyParams};
 
-declare_id!("4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu");
+declare_id!("AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27");
 
 #[program]
 pub mod policykit {

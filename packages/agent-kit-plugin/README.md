@@ -35,4 +35,6 @@ await agent.methods.executeSpendUnderPolicy({
 - Avoid loading unrestricted transfer/swap plugins that move agent-held balances if you rely on PolicyKit as the spend control.
 - Always pass `intentProgram` (or set `defaultIntentProgram`) for allowlist checks.
 
-See root [README.md](../../README.md) and [docs/SECURITY.md](../../docs/SECURITY.md).
+**Peer:** `solana-agent-kit` ^2.0.
+
+See root [README.md](../../README.md), [docs/SECURITY.md](../../docs/SECURITY.md), and [docs/THREAT_MODEL.md](../../docs/THREAT_MODEL.md).

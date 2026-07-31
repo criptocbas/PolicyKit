@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/policykit.json`.
  */
 export type Policykit = {
-  "address": "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu",
+  "address": "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27",
   "metadata": {
     "name": "policykit",
     "version": "0.1.0",

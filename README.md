@@ -1,5 +1,7 @@
 # PolicyKit
 
+[![CI](https://github.com/criptocbas/PolicyKit/actions/workflows/ci.yml/badge.svg)](https://github.com/criptocbas/PolicyKit/actions/workflows/ci.yml)
+
 **Open, Solana-native on-chain policy engine for AI agents.**
 
 Humans (or protocols) create enforceable on-chain policies. Agents can only move vault funds within those rules. Every spend is checked on-chain. Exceed a limit or call a forbidden program intent → clean transaction failure.
@@ -12,7 +14,23 @@ Built for Colosseum Eternal. Evolution of the X402Guard pattern into a general p
 - [x] Rules: per-tx + daily spend, program allow/deny, mint allowlist, rate limit, expiry  
 - [x] Events + distinct error codes + integration tests  
 - [x] **Phase 2** — TypeScript SDK (`@policykit/sdk`) + Solana Agent Kit plugin  
-- [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)
+- [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)  
+- [x] **Phase A (quality)** — CI, unit tests, threat model, error catalog, architecture docs  
+
+MVP feature set is complete. Next focus: product depth (dashboard, monitoring, tighter spend bounds) — not stack rewrites.
+
+## Docs
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System diagram and package map |
+| [docs/PROGRAM_DESIGN.md](./docs/PROGRAM_DESIGN.md) | On-chain design |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Security model and invariants |
+| [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md) | Adversarial model and residual risks |
+| [docs/ERROR_CATALOG.md](./docs/ERROR_CATALOG.md) | Error codes 6000–6023 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Build, test, PR rules |
+| [CHANGELOG.md](./CHANGELOG.md) | Release notes |
+| [AGENTS.md](./AGENTS.md) | Agent / contributor stack pins |
 
 ## Repo layout
 
@@ -22,18 +40,31 @@ packages/sdk/                # @policykit/sdk — typed client
 packages/agent-kit-plugin/   # @policykit/agent-kit-plugin
 apps/dashboard/              # Next.js 15 demo dashboard
 tests/                       # Program + SDK/plugin integration tests
-docs/                        # PROGRAM_DESIGN.md, SECURITY.md
+docs/                        # Design, security, threat model, architecture
 ```
 
 ## Quick start
 
 ```bash
-# Prerequisites: Solana CLI, Anchor 0.32.x, Node 20+, yarn
+# Prerequisites: Solana CLI, Anchor 0.32.x (avm use 0.32.1), Node 20+, yarn
 yarn install
 anchor build
 anchor test
 yarn dev:dashboard    # http://localhost:3000
 ```
+
+### Verify (CI-equivalent)
+
+```bash
+yarn install --frozen-lockfile
+yarn typecheck:packages
+yarn test:unit              # pure SDK tests (no validator)
+yarn test:integration       # anchor build + anchor test (localnet)
+# when UI changed:
+yarn build:dashboard
+```
+
+Or: `yarn ci:local` (typecheck + unit + integration).
 
 ### Dependency pins (platform-tools rustc 1.84)
 
@@ -182,7 +213,8 @@ Policy = PDA(["policy", authority, policy_id_le_bytes], program_id)
 Vault  = ATA(Policy, mint)   // created client-side (SDK deposit does this)
 ```
 
-Program ID (local/devnet keypair in repo): `4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu`
+Program ID (local/devnet; matches deploy keypair): `AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27`  
+(See `Anchor.toml` / `@policykit/sdk` `POLICYKIT_PROGRAM_ID`. Deploy keypair is gitignored under `target/deploy/`.)
 
 ## Dashboard (Phase 3)
 
@@ -240,4 +272,4 @@ catch (e) {
 
 ## License
 
-MIT (intended; confirm before public release).
+[MIT](./LICENSE)

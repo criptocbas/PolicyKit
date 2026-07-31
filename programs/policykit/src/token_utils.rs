@@ -18,11 +18,7 @@ pub fn load_token_account(
     expected_mint: &Pubkey,
     expected_owner: Option<&Pubkey>,
 ) -> Result<SplTokenAccount> {
-    require_keys_eq!(
-        *info.owner,
-        spl_token::ID,
-        PolicyKitError::MintMismatch
-    );
+    require_keys_eq!(*info.owner, spl_token::ID, PolicyKitError::MintMismatch);
     let account = SplTokenAccount::unpack(&info.try_borrow_data()?)
         .map_err(|_| error!(PolicyKitError::MintMismatch))?;
     require_keys_eq!(account.mint, *expected_mint, PolicyKitError::MintMismatch);
@@ -35,8 +31,7 @@ pub fn load_token_account(
 /// Deserialize and validate a classic SPL mint account.
 pub fn load_mint(info: &AccountInfo) -> Result<SplMint> {
     require_keys_eq!(*info.owner, spl_token::ID, PolicyKitError::MintMismatch);
-    SplMint::unpack(&info.try_borrow_data()?)
-        .map_err(|_| error!(PolicyKitError::MintMismatch))
+    SplMint::unpack(&info.try_borrow_data()?).map_err(|_| error!(PolicyKitError::MintMismatch))
 }
 
 /// SPL Token `Transfer` (instruction index 3).
@@ -47,7 +42,11 @@ pub fn transfer<'info>(
     authority: AccountInfo<'info>,
     amount: u64,
 ) -> Result<()> {
-    require_keys_eq!(*token_program.key, spl_token::ID, PolicyKitError::MintMismatch);
+    require_keys_eq!(
+        *token_program.key,
+        spl_token::ID,
+        PolicyKitError::MintMismatch
+    );
     let ix = spl_token::instruction::transfer(
         token_program.key,
         from.key,
@@ -70,7 +69,11 @@ pub fn transfer_signed<'info>(
     amount: u64,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
-    require_keys_eq!(*token_program.key, spl_token::ID, PolicyKitError::MintMismatch);
+    require_keys_eq!(
+        *token_program.key,
+        spl_token::ID,
+        PolicyKitError::MintMismatch
+    );
     let ix = spl_token::instruction::transfer(
         token_program.key,
         from.key,

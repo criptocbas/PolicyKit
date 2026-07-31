@@ -29,7 +29,7 @@ Copy `.env.example` → `.env.local`:
 
 ```bash
 NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com   # or Helius
-NEXT_PUBLIC_POLICYKIT_PROGRAM_ID=4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu
+NEXT_PUBLIC_POLICYKIT_PROGRAM_ID=AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27
 NEXT_PUBLIC_CLUSTER=devnet
 ```
 

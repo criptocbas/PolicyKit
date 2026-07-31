@@ -1,4 +1,5 @@
 [toolchain]
+anchor_version = "0.32.1"
 package_manager = "yarn"
 
 [features]
@@ -6,16 +7,18 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-policykit = "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu"
+policykit = "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27"
 
 [programs.devnet]
-policykit = "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu"
+policykit = "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+# Use localnet for `anchor test` (spins up a local validator). Deploy to
+# devnet/mainnet with: anchor deploy --provider.cluster devnet
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

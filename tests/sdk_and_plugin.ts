@@ -320,12 +320,14 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
   });
 
   it("fails cleanly: PolicyExpired", async () => {
-    const now = Math.floor(Date.now() / 1000);
+    // Generous window so create+fund+first spend always fits; then wait until past expires_at.
+    const expiresAt = Math.floor(Date.now() / 1000) + 12;
     const { policy } = await setupConservativePolicy({
-      expiresAt: now + 3,
+      expiresAt,
     });
     await agentSpend(policy, ui(1));
-    await new Promise((r) => setTimeout(r, 4000));
+    const waitMs = Math.max(0, (expiresAt + 2) * 1000 - Date.now());
+    await new Promise((r) => setTimeout(r, waitMs));
     try {
       await agentSpend(policy, ui(1));
       expect.fail("should reject");

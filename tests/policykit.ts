@@ -748,12 +748,12 @@ describe("policykit", () => {
   });
 
   it("rejects spend after expiry", async () => {
-    // expires ~2s from now
-    const now = Math.floor(Date.now() / 1000);
+    // Generous window so create+fund+first spend always fits; then wait until past expires_at.
+    const expiresAt = Math.floor(Date.now() / 1000) + 12;
     const id = new BN(8);
     const pda = await createPolicyWithParams(
       id,
-      defaultCreateParams({ expiresAt: new BN(now + 3) })
+      defaultCreateParams({ expiresAt: new BN(expiresAt) })
     );
     const vault = getAssociatedTokenAddressSync(usdcMint, pda, true);
     await provider.sendAndConfirm(
@@ -772,8 +772,8 @@ describe("policykit", () => {
     // Should work immediately
     await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(1), JUPITER_V6);
 
-    // Wait for expiry
-    await new Promise((r) => setTimeout(r, 4000));
+    const waitMs = Math.max(0, (expiresAt + 2) * 1000 - Date.now());
+    await new Promise((r) => setTimeout(r, waitMs));
 
     try {
       await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(1), JUPITER_V6);
@@ -956,5 +956,257 @@ describe("policykit", () => {
     } catch (e) {
       expectError(e, "ZeroAmount");
     }
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase A — rejection matrix / authority edges
+  // -------------------------------------------------------------------------
+
+  async function ensureVault(pda: PublicKey, mint: PublicKey): Promise<PublicKey> {
+    const vault = getAssociatedTokenAddressSync(mint, pda, true);
+    const info = await connection.getAccountInfo(vault);
+    if (!info) {
+      await provider.sendAndConfirm(
+        new anchor.web3.Transaction().add(
+          createAssociatedTokenAccountInstruction(
+            authority.publicKey,
+            vault,
+            pda,
+            mint
+          )
+        ),
+        []
+      );
+    }
+    return vault;
+  }
+
+  it("rejects create with program list longer than max (ProgramListTooLong)", async () => {
+    const eleven = Array.from({ length: 11 }, () => Keypair.generate().publicKey);
+    try {
+      await createPolicyWithParams(
+        new BN(20),
+        defaultCreateParams({
+          programAllowlistEnabled: true,
+          programAllowlist: eleven,
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "ProgramListTooLong");
+    }
+  });
+
+  it("rejects create with mint list longer than max (MintListTooLong)", async () => {
+    const eleven = Array.from({ length: 11 }, () => Keypair.generate().publicKey);
+    try {
+      await createPolicyWithParams(
+        new BN(21),
+        defaultCreateParams({
+          mintAllowlistEnabled: true,
+          mintAllowlist: eleven,
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "MintListTooLong");
+    }
+  });
+
+  it("rejects create with empty mint allowlist when enabled (EmptyMintAllowlist)", async () => {
+    try {
+      await createPolicyWithParams(
+        new BN(22),
+        defaultCreateParams({
+          mintAllowlistEnabled: true,
+          mintAllowlist: [],
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "EmptyMintAllowlist");
+    }
+  });
+
+  it("rejects create with rate limit and window_seconds = 0 (InvalidRateWindow)", async () => {
+    try {
+      await createPolicyWithParams(
+        new BN(23),
+        defaultCreateParams({
+          maxActionsPerWindow: 5,
+          windowSeconds: 0,
+        })
+      );
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InvalidRateWindow");
+    }
+  });
+
+  it("rejects update_policy enabling empty program allowlist", async () => {
+    const pda = await createPolicyWithParams(new BN(24), defaultCreateParams());
+    try {
+      await program.methods
+        .updatePolicy({
+          expiresAt: new BN(0),
+          maxPerTransaction: oneUsdc(20),
+          maxPerDay: oneUsdc(50),
+          maxActionsPerWindow: 5,
+          windowSeconds: 60,
+          programAllowlistEnabled: true,
+          programAllowlist: [],
+          programDenylistEnabled: false,
+          programDenylist: [],
+          mintAllowlistEnabled: true,
+          mintAllowlist: [usdcMint],
+        } as any)
+        .accounts({ authority: authority.publicKey, policy: pda })
+        .rpc();
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "EmptyProgramAllowlist");
+    }
+  });
+
+  it("rejects spend exceeding vault balance (InsufficientVaultBalance)", async () => {
+    const pda = await createPolicyWithParams(
+      new BN(25),
+      defaultCreateParams({
+        maxPerTransaction: oneUsdc(100),
+        maxPerDay: oneUsdc(100),
+      })
+    );
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(5));
+
+    try {
+      await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(10), JUPITER_V6);
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InsufficientVaultBalance");
+    }
+  });
+
+  it("rejects spend when vault authority is not the policy PDA", async () => {
+    const pda = await createPolicyWithParams(new BN(26), defaultCreateParams());
+    // Use agent-owned ATA as fake "vault" — wrong owner for policy.
+    try {
+      await executeSpend(pda, usdcMint, agentUsdc, agentUsdc, oneUsdc(1), JUPITER_V6);
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InvalidVaultAuthority");
+    }
+  });
+
+  it("rejects spend when destination mint mismatches vault mint", async () => {
+    const pda = await createPolicyWithParams(new BN(27), defaultCreateParams());
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(10));
+
+    try {
+      // agentOther is otherMint ATA; vault is usdcMint
+      await executeSpend(pda, usdcMint, vault, agentOther, oneUsdc(1), JUPITER_V6);
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "MintMismatch");
+    }
+  });
+
+  it("rejects outsider update_policy (UnauthorizedAuthority)", async () => {
+    const pda = await createPolicyWithParams(new BN(28), defaultCreateParams());
+    try {
+      await program.methods
+        .updatePolicy({
+          expiresAt: new BN(0),
+          maxPerTransaction: oneUsdc(1),
+          maxPerDay: oneUsdc(1),
+          maxActionsPerWindow: 1,
+          windowSeconds: 60,
+          programAllowlistEnabled: true,
+          programAllowlist: [JUPITER_V6],
+          programDenylistEnabled: false,
+          programDenylist: [],
+          mintAllowlistEnabled: true,
+          mintAllowlist: [usdcMint],
+        } as any)
+        .accounts({ authority: outsider.publicKey, policy: pda })
+        .signers([outsider])
+        .rpc();
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "UnauthorizedAuthority");
+    }
+  });
+
+  it("rejects outsider clawback (UnauthorizedAuthority)", async () => {
+    const pda = await createPolicyWithParams(new BN(29), defaultCreateParams());
+    const vault = await ensureVault(pda, usdcMint);
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(10));
+    const outsiderDest = outsiderUsdc;
+
+    try {
+      await program.methods
+        .clawback(oneUsdc(1))
+        .accounts({
+          authority: outsider.publicKey,
+          policy: pda,
+          mint: usdcMint,
+          vaultToken: vault,
+          destinationToken: outsiderDest,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([outsider])
+        .rpc();
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "UnauthorizedAuthority");
+    }
+  });
+
+  it("rejects outsider set_agent (UnauthorizedAuthority)", async () => {
+    const pda = await createPolicyWithParams(new BN(30), defaultCreateParams());
+    try {
+      await program.methods
+        .setAgent(outsider.publicKey)
+        .accounts({ authority: outsider.publicKey, policy: pda })
+        .signers([outsider])
+        .rpc();
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "UnauthorizedAuthority");
+    }
+  });
+
+  it("allows outsider deposit into vault (open deposit model)", async () => {
+    const pda = await createPolicyWithParams(new BN(31), defaultCreateParams());
+    const vault = await ensureVault(pda, usdcMint);
+
+    // Fund outsider with USDC
+    await mintTo(usdcMint, outsiderUsdc, oneUsdc(50).toNumber());
+    await deposit(pda, usdcMint, outsiderUsdc, vault, oneUsdc(15), outsider);
+
+    const vaultAcc = await getAccount(connection, vault);
+    expect(Number(vaultAcc.amount)).to.equal(oneUsdc(15).toNumber());
+  });
+
+  it("supports independent policies for the same authority (policy_id 2)", async () => {
+    const pda1 = await createPolicyWithParams(new BN(32), defaultCreateParams());
+    const pda2 = await createPolicyWithParams(new BN(33), defaultCreateParams());
+    expect(pda1.equals(pda2)).to.equal(false);
+
+    const vault1 = await ensureVault(pda1, usdcMint);
+    const vault2 = await ensureVault(pda2, usdcMint);
+    await deposit(pda1, usdcMint, authorityUsdc, vault1, oneUsdc(10));
+    await deposit(pda2, usdcMint, authorityUsdc, vault2, oneUsdc(20));
+
+    await executeSpend(pda1, usdcMint, vault1, agentUsdc, oneUsdc(1), JUPITER_V6);
+    await executeSpend(pda2, usdcMint, vault2, agentUsdc, oneUsdc(2), JUPITER_V6);
+
+    const p1 = await program.account.policy.fetch(pda1);
+    const p2 = await program.account.policy.fetch(pda2);
+    expect(p1.spentToday.toNumber()).to.equal(oneUsdc(1).toNumber());
+    expect(p2.spentToday.toNumber()).to.equal(oneUsdc(2).toNumber());
+    expect(p1.policyId.toNumber()).to.equal(32);
+    expect(p2.policyId.toNumber()).to.equal(33);
   });
 });

@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 
 /** Default PolicyKit program id (localnet / devnet keypair in repo). */
 export const POLICYKIT_PROGRAM_ID = new PublicKey(
-  "4KSYqUXxHrgMyyAnF56Gwir44Gt9NB49gE43pkPvCYeu"
+  "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27"
 );
 
 /** PDA seed prefix for Policy accounts. */

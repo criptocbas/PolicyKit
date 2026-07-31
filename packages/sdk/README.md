@@ -21,4 +21,10 @@ await sdk.executeSpend({
 });
 ```
 
-See root [README.md](../../README.md).
+**Peers:** `@coral-xyz/anchor` ^0.32, `@solana/web3.js` ^1.95.
+
+**Docs:** root [README](../../README.md) · [error catalog](../../docs/ERROR_CATALOG.md) · [architecture](../../docs/ARCHITECTURE.md)
+
+```bash
+yarn workspace @policykit/sdk test   # pure unit tests
+```

@@ -11,10 +11,7 @@ use crate::state::{Policy, UpdatePolicyParams};
 /// - Only `policy.authority` may call.
 /// - PDA seeds + `has_one` bind the account to the signer.
 /// - List/window validation re-run on every update.
-pub fn update_policy_handler(
-    ctx: Context<UpdatePolicy>,
-    params: UpdatePolicyParams,
-) -> Result<()> {
+pub fn update_policy_handler(ctx: Context<UpdatePolicy>, params: UpdatePolicyParams) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
 
     Policy::validate_lists_and_windows(

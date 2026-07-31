@@ -24,3 +24,4 @@ apps/*/out
 
 # OS
 Thumbs.db
+.superpowers/

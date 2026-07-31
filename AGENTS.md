@@ -37,17 +37,19 @@ Read `docs/PROGRAM_DESIGN.md` and `docs/SECURITY.md` before changing money paths
 
 ## Definition of done (this package)
 
-1. `program_autofixer` clean on touched Rust.
+1. `program_autofixer` clean on touched Rust (when available).
 2. Relevant tests green:
    ```bash
-   # from colosseum/eternal/policykit
-   yarn build:packages   # if SDK/plugin touched
-   anchor build && anchor test
+   yarn test:unit                    # always for SDK pure logic
+   yarn build:packages               # if SDK/plugin touched
+   anchor build && anchor test       # if program or integration tests touched
+   yarn build:dashboard              # if UI touched
    ```
-3. New rules or errors: add a **fails cleanly** case in `tests/policykit.ts` and/or `tests/sdk_and_plugin.ts` (pitch/demo contract).
-4. Update `docs/SECURITY.md` / `PROGRAM_DESIGN.md` if invariants or non-goals change.
+3. New rules or errors: add a **fails cleanly** case in `tests/policykit.ts` and/or `tests/sdk_and_plugin.ts` (pitch/demo contract); update `docs/ERROR_CATALOG.md` + SDK error map.
+4. Update `docs/SECURITY.md` / `PROGRAM_DESIGN.md` / `THREAT_MODEL.md` if invariants or non-goals change.
 5. Short risk notes for CPI, tokens, authorities, or agent signing.
 6. No mainnet deploy / upgrade authority changes without explicit user confirmation.
+7. Prefer Anchor **0.32.1** via `avm use 0.32.1` (see `Anchor.toml` toolchain).
 
 ## Safety
 

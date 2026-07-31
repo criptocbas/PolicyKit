@@ -1,5 +1,7 @@
 # PolicyKit Security Model
 
+> Full adversarial model: [THREAT_MODEL.md](./THREAT_MODEL.md). Error reference: [ERROR_CATALOG.md](./ERROR_CATALOG.md). Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ## Trust boundaries
 
 | Actor | Can do | Cannot do |
