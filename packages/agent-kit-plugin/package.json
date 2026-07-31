@@ -1,0 +1,38 @@
+{
+  "name": "@policykit/agent-kit-plugin",
+  "version": "0.1.0",
+  "description": "Solana Agent Kit plugin — forces value movement through PolicyKit execute_spend",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@policykit/sdk": "0.1.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.5",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "solana-agent-kit": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "solana-agent-kit": "^2.0.10",
+    "typescript": "^5.7.3"
+  }
+}

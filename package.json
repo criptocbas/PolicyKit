@@ -1,8 +1,15 @@
 {
-  "license": "ISC",
+  "name": "policykit",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "build:packages": "yarn workspace @policykit/sdk build && yarn workspace @policykit/agent-kit-plugin build",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "test": "yarn build:packages && anchor test"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

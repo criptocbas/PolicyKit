@@ -1,0 +1,39 @@
+{
+  "name": "@policykit/sdk",
+  "version": "0.1.0",
+  "description": "Typed TypeScript client for the PolicyKit on-chain policy engine",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./idl/policykit.json": "./idl/policykit.json"
+  },
+  "files": [
+    "dist",
+    "idl",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.5"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@coral-xyz/anchor": "^0.32.0",
+    "@solana/web3.js": "^1.95.0"
+  }
+}

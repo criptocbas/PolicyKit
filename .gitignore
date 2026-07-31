@@ -10,6 +10,7 @@ test-ledger
 .yarn/cache
 .yarn/install-state.gz
 dist
+packages/*/dist
 .idea
 .vscode
 *.log
