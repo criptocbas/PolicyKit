@@ -12,6 +12,7 @@ PolicyKit is a **security product** (on-chain policy vault for AI agents). Prefe
 | Transfers | `spl_token::instruction::transfer` via `token_utils` | No `anchor-spl` account types by design |
 | Clients | `@coral-xyz/anchor` + `@solana/web3.js` v1 | SDK, Agent Kit plugin, and dashboard depend on this |
 | Package manager | **yarn** (workspaces) | Matches `Anchor.toml` and lockfile |
+| Node | **≥ 22** (CI uses 22) | `solana-agent-kit` engines require `>=22.0.0`; Node 20 fails `yarn install` |
 | Tests | `anchor test` → **ts-mocha** integration tests | Real instruction coverage in `tests/` |
 
 **Do not** migrate this package to Kit-first / Anchor 1.1 / LiteSVM-only / npm-only unless the user explicitly requests a stack upgrade and accepts breaking the monorepo packages. Token-2022 / `transfer_checked` / multi-mint agent spend are **documented post-MVP**, not silent refactors.

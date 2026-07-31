@@ -6,7 +6,7 @@ Thanks for helping improve PolicyKit. This project is a **security-sensitive** o
 
 | Tool | Version / notes |
 |------|-----------------|
-| Node.js | **20+** |
+| Node.js | **22+** (`solana-agent-kit` engines; CI uses 22) |
 | yarn | Classic workspaces (see root `package.json`) |
 | Solana CLI | Compatible with Anchor 0.32 (Agave) |
 | Anchor CLI | **0.32.x** (pin with `avm install 0.32.1 && avm use 0.32.1`) |
