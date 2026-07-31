@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "ts-mocha -p tsconfig.json -t 10000 'test/**/*.test.ts'"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

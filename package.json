@@ -11,6 +11,11 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "test": "yarn build:packages && anchor test",
+    "test:unit": "yarn workspace @policykit/sdk test",
+    "test:integration": "yarn build:packages && anchor test",
+    "typecheck:packages": "yarn workspace @policykit/sdk build && yarn workspace @policykit/agent-kit-plugin build",
+    "typecheck:dashboard": "yarn workspace @policykit/dashboard exec tsc --noEmit",
+    "ci:local": "yarn typecheck:packages && yarn test:unit && yarn test:integration",
     "build:dashboard": "yarn build:packages && yarn workspace @policykit/dashboard build",
     "dev:dashboard": "yarn workspace @policykit/dashboard dev",
     "build": "yarn build:packages && yarn workspace @policykit/dashboard build"
