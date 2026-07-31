@@ -48,6 +48,8 @@ export {
   toBn,
 } from "./helpers";
 
+export { computeMaxDamage, type MaxDamageReport } from "./max-damage";
+
 export {
   POLICY_TEMPLATES,
   conservativeTradingTemplate,

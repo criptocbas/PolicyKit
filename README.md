@@ -2,37 +2,40 @@
 
 [![CI](https://github.com/criptocbas/PolicyKit/actions/workflows/ci.yml/badge.svg)](https://github.com/criptocbas/PolicyKit/actions/workflows/ci.yml)
 
-**Open, Solana-native on-chain policy engine for AI agents.**
+**Open on-chain policy vault for Solana Agent Kit agents.**
 
-Humans (or protocols) create enforceable on-chain policies. Agents can only move vault funds within those rules. Every spend is checked on-chain. Exceed a limit or call a forbidden program intent → clean transaction failure.
+If the agent key is compromised, damage is bounded by per-tx/daily/rate limits, program allowlists, and destination owner allowlists. Authority can **pause** (circuit breaker) and **clawback**. Fund the vault — not the hot key.
 
-Built for Colosseum Eternal. Evolution of the X402Guard pattern into a general policy primitive.
+Built for Colosseum Eternal. Edge: **Agent Kit default path (A)** + **compromised-agent max damage (C)**. Beachhead: x402/API-style spenders.
+
+## If the agent is stolen
+
+| Bound | On-chain |
+|-------|----------|
+| Per-tx / daily / rate | Yes |
+| Destination owners | Yes (allowlist) |
+| Declared program intent | Yes (allow/deny) |
+| Pause + clawback | Authority only |
+
+Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Public page: `/p/<policyPda>` · Competitive honesty: [docs/COMPETITIVE.md](./docs/COMPETITIVE.md)
 
 ## Status
 
-- [x] **Phase 1** — Anchor program: create / update / pause / set_agent / deposit / clawback / execute_spend  
-- [x] Rules: per-tx + daily spend, program allow/deny, mint allowlist, rate limit, expiry  
-- [x] Events + distinct error codes + integration tests  
-- [x] **Phase 2** — TypeScript SDK (`@policykit/sdk`) + Solana Agent Kit plugin  
-- [x] **Phase 3** — Next.js dashboard (`apps/dashboard`)  
-- [x] **Phase A (quality)** — CI, unit tests, threat model, error catalog, architecture docs  
-- [x] **Phase B (product depth)** — dashboard control room, chain activity, destination owner allowlist  
-- [x] **Phase C (live proof)** — devnet deploy, `yarn demo:devnet`, public proof JSON + dashboard card  
-
-MVP + control room + **live on Solana devnet**. See [docs/DEVNET.md](./docs/DEVNET.md).
+- [x] Anchor program + SDK + Agent Kit plugin + dashboard  
+- [x] Destination owner allowlist · quality suite · devnet deploy  
+- [x] **Phase D (A+C):** live adversary ticks, public policy page, Agent Kit example  
 
 ## Docs
 
 | Doc | Purpose |
 |-----|---------|
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System diagram and package map |
-| [docs/PROGRAM_DESIGN.md](./docs/PROGRAM_DESIGN.md) | On-chain design |
-| [docs/SECURITY.md](./docs/SECURITY.md) | Security model and invariants |
-| [docs/THREAT_MODEL.md](./docs/THREAT_MODEL.md) | Adversarial model and residual risks |
-| [docs/ERROR_CATALOG.md](./docs/ERROR_CATALOG.md) | Error codes 6000–6023 |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Build, test, PR rules |
-| [CHANGELOG.md](./CHANGELOG.md) | Release notes |
-| [AGENTS.md](./AGENTS.md) | Agent / contributor stack pins |
+| [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) | Compromised-agent bounds |
+| [docs/COMPETITIVE.md](./docs/COMPETITIVE.md) | Where we win / lose |
+| [docs/ECOSYSTEM.md](./docs/ECOSYSTEM.md) | Agent Kit contribution path |
+| [docs/DEVNET.md](./docs/DEVNET.md) | Devnet deploy + proof |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Invariants |
+| [examples/agent-kit-bounded-spend](./examples/agent-kit-bounded-spend) | Gold-standard Agent Kit example |
 
 ## Repo layout
 
@@ -68,14 +71,17 @@ yarn build:dashboard
 
 Or: `yarn ci:local` (typecheck + unit + integration).
 
-### Devnet live proof (Phase C)
+### Devnet live proof + always-on adversary (A+C)
 
 ```bash
 yarn deploy:devnet    # upgrade program (needs SOL + upgrade authority)
-yarn demo:devnet      # mint + policy + success/fail txs → proof/*.json
-yarn dev:dashboard    # load Live proof card → “Load this policy”
+yarn agent:setup      # create live policy + agent key (gitignored)
+yarn agent:tick       # allowed spend + 2 expected rejects → live-feed.json
+yarn demo:devnet      # one-shot proof (optional)
+yarn dev:dashboard    # Live adversary feed + /p/<policy>
 ```
 
+Schedule ticks: [scripts/live-agent/README.md](./scripts/live-agent/README.md).  
 Details: [docs/DEVNET.md](./docs/DEVNET.md).
 
 ### Dependency pins (platform-tools rustc 1.84)

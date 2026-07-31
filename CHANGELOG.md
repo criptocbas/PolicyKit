@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-31
+
+### Added
+
+- Phase D (A+C edge): `yarn agent:setup` / `yarn agent:tick` live adversary loop.
+- Public policy page `/p/[address]` with max-damage panel (`computeMaxDamage`).
+- Dashboard live agent feed; circuit-breaker pause copy.
+- `examples/agent-kit-bounded-spend`; docs: COMPETITIVE, MAX_DAMAGE, ECOSYSTEM, BEACHHEAD_X402.
+
 ## [0.3.0] - 2026-07-31
 
 ### Added

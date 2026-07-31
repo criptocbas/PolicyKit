@@ -38,6 +38,7 @@ import { PolicySwitcher } from "@/components/policy-switcher";
 import { ActivityFeed } from "@/components/activity-feed";
 import { AgentDemoPanel } from "@/components/agent-demo-panel";
 import { LiveProofCard } from "@/components/live-proof-card";
+import { LiveAgentFeed } from "@/components/live-agent-feed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -330,18 +331,6 @@ export function DashboardApp() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
-          <LiveProofCard
-            onLoadPolicy={(addr, mint) => {
-              loadPolicyInput(addr);
-              if (mint) {
-                try {
-                  persistMint(new PublicKey(mint));
-                } catch {
-                  /* ignore */
-                }
-              }
-            }}
-          />
           <PolicySwitcher
             policies={policies}
             active={policy?.toBase58() ?? null}
@@ -354,10 +343,6 @@ export function DashboardApp() {
               else setPolicy(null);
             }}
           />
-
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -555,6 +540,22 @@ export function DashboardApp() {
             />
           </section>
         )}
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <LiveAgentFeed />
+          <LiveProofCard
+            onLoadPolicy={(addr, mint) => {
+              loadPolicyInput(addr);
+              if (mint) {
+                try {
+                  persistMint(new PublicKey(mint));
+                } catch {
+                  /* ignore */
+                }
+              }
+            }}
+          />
+        </section>
 
         <section className="grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3">

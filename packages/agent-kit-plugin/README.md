@@ -1,11 +1,14 @@
 # @policykit/agent-kit-plugin
 
-Solana Agent Kit v2 plugin that forces vault spends through PolicyKit `execute_spend`.
+**Edge A:** default Agent Kit path for open on-chain spend policy.  
+**Edge C:** economic bounds if the agent key is compromised.
+
+Solana Agent Kit v2 plugin that routes **policy vault** outflows only through on-chain `execute_spend`.
 
 ```ts
 import { SolanaAgentKit, KeypairWallet } from "solana-agent-kit";
 import { createPolicyKitPlugin } from "@policykit/agent-kit-plugin";
-import { KNOWN_PROGRAMS } from "@policykit/sdk";
+import { KNOWN_PROGRAMS, computeMaxDamage } from "@policykit/sdk";
 
 const agent = new SolanaAgentKit(
   new KeypairWallet(agentKeypair, rpcUrl),
@@ -19,6 +22,9 @@ const agent = new SolanaAgentKit(
   })
 );
 
+const status = await agent.methods.getPolicyStatus();
+console.log(computeMaxDamage(status.policy).summary);
+
 await agent.methods.executeSpendUnderPolicy({
   amount: "10000000",
   destination: agent.wallet.publicKey.toBase58(),
@@ -28,13 +34,26 @@ await agent.methods.executeSpendUnderPolicy({
 
 **Actions:** `POLICYKIT_EXECUTE_SPEND`, `POLICYKIT_GET_STATUS`, `POLICYKIT_CHECK_SPEND`
 
-### Security ops
+### Architecture
 
-- Gates **vault** spends only via on-chain `execute_spend` — not a whole-agent sandbox.
-- Fund the **policy vault**, not the agent key (agent needs fee SOL only).
-- Avoid loading unrestricted transfer/swap plugins that move agent-held balances if you rely on PolicyKit as the spend control.
-- Always pass `intentProgram` (or set `defaultIntentProgram`) for allowlist checks.
+```
+Authority → Policy PDA (rules) → Vault ATA
+Agent + this plugin → execute_spend only (checked)
+```
+
+### Security ops (composition)
+
+- Gates **vault** spends only — **not** a whole-agent sandbox.
+- **Fund the vault**, not the agent key (fee SOL only).
+- **Do not** co-load unrestricted transfer/swap plugins if PolicyKit is the sole control.
+- Prefer destination + program allowlists enabled.
+- Always pass `intentProgram` (or `defaultIntentProgram`).
+- Authority: pause (circuit breaker) + clawback.
+
+### Gold example
+
+See monorepo `examples/agent-kit-bounded-spend` and live ticks `yarn agent:tick`.
 
 **Peer:** `solana-agent-kit` ^2.0.
 
-See root [README.md](../../README.md), [docs/SECURITY.md](../../docs/SECURITY.md), and [docs/THREAT_MODEL.md](../../docs/THREAT_MODEL.md).
+See root [README](../../README.md), [MAX_DAMAGE](../../docs/MAX_DAMAGE.md), [COMPETITIVE](../../docs/COMPETITIVE.md).

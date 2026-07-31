@@ -1,0 +1,15 @@
+{
+  "cluster": "devnet",
+  "rpcUrl": "https://api.devnet.solana.com",
+  "programId": "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27",
+  "policy": "GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n",
+  "policyId": 785539684,
+  "spendMint": "DSpZVfbdt9jmthFZ3mCNF29vVDAZdQkMSKhYDPUghX23",
+  "agent": "DZctrJUVCL2rJCDsyx86zEP1p8Dm3veJsc5woyPfdxYh",
+  "authority": "B6MtVeqn7BrJ8HTX6CeP8VugNWyCqqbfcDMxYBknzPt7",
+  "createdAt": "2026-07-31T23:14:46.671Z",
+  "explorer": {
+    "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet",
+    "program": "https://solscan.io/account/AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27?cluster=devnet"
+  }
+}

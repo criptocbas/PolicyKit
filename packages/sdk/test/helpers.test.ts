@@ -9,6 +9,7 @@ import {
   isExpired,
   previewSpend,
 } from "../src/helpers";
+import { computeMaxDamage } from "../src/max-damage";
 import { SECONDS_PER_DAY, KNOWN_PROGRAMS } from "../src/constants";
 import type { PolicyAccount } from "../src/types";
 
@@ -251,5 +252,24 @@ describe("previewSpend", () => {
       }
     );
     expect(r).to.deep.equal({ ok: true });
+  });
+});
+
+describe("computeMaxDamage", () => {
+  it("summarizes bounds when caps and dest allowlist set", () => {
+    const p = makePolicy({
+      maxPerTransaction: new BN(5_000_000),
+      maxPerDay: new BN(50_000_000),
+      spentToday: new BN(10_000_000),
+      maxActionsPerWindow: 10,
+      destinationAllowlistEnabled: true,
+      destinationAllowlist: [AGENT],
+    });
+    const m = computeMaxDamage(p, 1_700_000_000);
+    expect(m.maxPerAction!.toNumber()).to.equal(5_000_000);
+    expect(m.remainingDaily!.toNumber()).to.equal(40_000_000);
+    expect(m.maxPerRateWindow!.toNumber()).to.equal(50_000_000);
+    expect(m.destinationOwners).to.have.length(1);
+    expect(m.summary).to.include("allowed owner");
   });
 });

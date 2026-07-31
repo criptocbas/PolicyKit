@@ -7,6 +7,12 @@
 
 ---
 
+## Primary scenario: compromised agent (edge C)
+
+Assume the agent key is stolen or the model is jailbroken. **Max damage** is bounded by vault rules (per-tx, daily, rate, destination owners, program lists) plus authority pause/clawback. See [MAX_DAMAGE.md](./MAX_DAMAGE.md) and the public page `/p/<policy>`.
+
+Live proof: `yarn agent:tick` records allowed spends and intentional rejects.
+
 ## 1. Assets
 
 | Asset | Location | Sensitivity |

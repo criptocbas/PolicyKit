@@ -20,7 +20,9 @@
     "dev:dashboard": "yarn workspace @policykit/dashboard dev",
     "build": "yarn build:packages && yarn workspace @policykit/dashboard build",
     "deploy:devnet": "bash scripts/deploy-devnet.sh",
-    "demo:devnet": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/devnet-live-demo.ts"
+    "demo:devnet": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/devnet-live-demo.ts",
+    "agent:setup": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/setup-live-policy.ts",
+    "agent:tick": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/run-tick.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

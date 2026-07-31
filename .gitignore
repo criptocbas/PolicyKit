@@ -21,6 +21,8 @@ apps/*/out
 **/id.json
 **/*-keypair.json
 !target/deploy/.gitkeep
+proof/.agent-keypair.json
+**/.agent-keypair.json
 
 # OS
 Thumbs.db

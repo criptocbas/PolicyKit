@@ -89,7 +89,7 @@ export function AuthorityControls({
       <CardHeader>
         <CardTitle>Authority controls</CardTitle>
         <CardDescription>
-          You always retain pause and clawback power.
+          Circuit breaker: pause stops all agent vault spends immediately. Clawback recovers funds.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -102,17 +102,27 @@ export function AuthorityControls({
               onClick={unpause}
             >
               <Play className="h-4 w-4" />
-              Unpause
+              Unpause (resume agent)
             </Button>
           ) : (
             <Button
               className="flex-1"
               variant="danger"
               disabled={busy || !policy}
-              onClick={pause}
+              onClick={() => {
+                if (
+                  typeof window !== "undefined" &&
+                  !window.confirm(
+                    "Pause policy? Agent execute_spend will fail until you unpause."
+                  )
+                ) {
+                  return;
+                }
+                pause();
+              }}
             >
               <Pause className="h-4 w-4" />
-              Pause
+              Pause (circuit breaker)
             </Button>
           )}
         </div>
