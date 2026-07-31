@@ -775,6 +775,21 @@ export type Policykit = {
       "code": 6020,
       "name": "invalidVaultAuthority",
       "msg": "Vault token account authority must be the policy PDA"
+    },
+    {
+      "code": 6021,
+      "name": "spendMintRequired",
+      "msg": "Only the policy spend_mint may be transferred via execute_spend"
+    },
+    {
+      "code": 6022,
+      "name": "invalidAgent",
+      "msg": "Agent pubkey must not be the default public key"
+    },
+    {
+      "code": 6023,
+      "name": "invalidDestination",
+      "msg": "Destination token account must not be owned by the policy PDA"
     }
   ],
   "types": [

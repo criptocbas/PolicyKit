@@ -16,8 +16,9 @@ use crate::token_utils::{self, load_token_account};
 /// - Checks: pause, expiry, program allow/deny (`intent_program`), mint allowlist,
 ///   rate limit, per-tx + daily spend limits (for `spend_mint`).
 /// - Vault token authority constrained to policy PDA; transfer signed with PDA seeds.
-/// - Destination mint must match; destination owner is unrestricted so agents can
-///   pay APIs / routers — economic risk is bounded by spend caps + mint list.
+/// - Destination mint must match; destination owner must not be the policy PDA
+///   (no vault self-transfer). External destinations OK — economic risk is
+///   bounded by spend_mint-only + spend caps + mint list.
 ///
 /// # Intent program
 /// Clients (Agent Kit plugin) must pass the program the agent intends to interact
@@ -35,12 +36,17 @@ pub fn execute_spend_handler(
         &mint_key,
         Some(&ctx.accounts.policy.key()),
     )?;
-    // Destination must be same mint; owner unrestricted (see security note).
-    load_token_account(
+    // Destination must be same mint; must not be owned by the policy PDA
+    // (blocks vault self-transfer budget grief).
+    let destination = load_token_account(
         &ctx.accounts.destination_token.to_account_info(),
         &mint_key,
         None,
     )?;
+    require!(
+        destination.owner != ctx.accounts.policy.key(),
+        PolicyKitError::InvalidDestination
+    );
 
     // Enforce + record before CPI so failed checks never move funds.
     ctx.accounts

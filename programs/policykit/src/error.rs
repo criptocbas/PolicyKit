@@ -64,4 +64,14 @@ pub enum PolicyKitError {
 
     #[msg("Vault token account authority must be the policy PDA")]
     InvalidVaultAuthority,
+
+    /// MVP: execute_spend may only move `spend_mint` (closes multi-mint cap bypass).
+    #[msg("Only the policy spend_mint may be transferred via execute_spend")]
+    SpendMintRequired,
+
+    #[msg("Agent pubkey must not be the default public key")]
+    InvalidAgent,
+
+    #[msg("Destination token account must not be owned by the policy PDA")]
+    InvalidDestination,
 }

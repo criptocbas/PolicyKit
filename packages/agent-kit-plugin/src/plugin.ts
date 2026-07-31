@@ -12,6 +12,10 @@ import { createCheckSpendAction } from "./actions/checkSpend";
 /**
  * Create a Solana Agent Kit plugin bound to a specific Policy PDA.
  *
+ * Security: this plugin only routes **policy vault** outflows through on-chain
+ * `execute_spend`. It does not sandbox other Agent Kit plugins or agent-held
+ * balances. Fund the vault, not the agent wallet (fee SOL only on the agent).
+ *
  * @example
  * ```ts
  * import { SolanaAgentKit, KeypairWallet } from "solana-agent-kit";
@@ -30,7 +34,7 @@ import { createCheckSpendAction } from "./actions/checkSpend";
  *   })
  * );
  *
- * // Only path for vault spends:
+ * // Only supported path for vault spends:
  * await agent.methods.executeSpendUnderPolicy({
  *   amount: "10000000",
  *   destination: agent.wallet.publicKey.toBase58(),

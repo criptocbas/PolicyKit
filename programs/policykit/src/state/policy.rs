@@ -203,6 +203,10 @@ impl Policy {
         self.assert_active(now)?;
         self.refresh_windows(now);
 
+        // MVP: only spend_mint may leave the vault via execute_spend.
+        // Prevents bypassing per-tx/daily caps with other vault mints.
+        require_keys_eq!(*mint, self.spend_mint, PolicyKitError::SpendMintRequired);
+
         if self.program_allowlist_enabled {
             require!(
                 self.program_allowlist.iter().any(|p| p == intent_program),
@@ -230,32 +234,30 @@ impl Policy {
             );
         }
 
-        // Spend accounting only for the designated spend mint.
-        if *mint == self.spend_mint {
-            if self.max_per_transaction > 0 {
-                require!(
-                    amount <= self.max_per_transaction,
-                    PolicyKitError::ExceedsPerTransactionLimit
-                );
-            }
-            if self.max_per_day > 0 {
-                let new_spent = self
-                    .spent_today
-                    .checked_add(amount)
-                    .ok_or(PolicyKitError::Overflow)?;
-                require!(
-                    new_spent <= self.max_per_day,
-                    PolicyKitError::ExceedsDailyLimit
-                );
-                self.spent_today = new_spent;
-            } else {
-                self.spent_today = self.spent_today.saturating_add(amount);
-            }
-            self.total_spent = self
-                .total_spent
+        // Economic caps (always on spend_mint after the require above).
+        if self.max_per_transaction > 0 {
+            require!(
+                amount <= self.max_per_transaction,
+                PolicyKitError::ExceedsPerTransactionLimit
+            );
+        }
+        if self.max_per_day > 0 {
+            let new_spent = self
+                .spent_today
                 .checked_add(amount)
                 .ok_or(PolicyKitError::Overflow)?;
+            require!(
+                new_spent <= self.max_per_day,
+                PolicyKitError::ExceedsDailyLimit
+            );
+            self.spent_today = new_spent;
+        } else {
+            self.spent_today = self.spent_today.saturating_add(amount);
         }
+        self.total_spent = self
+            .total_spent
+            .checked_add(amount)
+            .ok_or(PolicyKitError::Overflow)?;
 
         self.actions_in_window = self
             .actions_in_window

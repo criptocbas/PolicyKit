@@ -11,6 +11,11 @@ use crate::state::Policy;
 /// - Only `policy.authority` may rotate the agent.
 /// - Immediate effect: old agent can no longer spend.
 pub fn set_agent_handler(ctx: Context<SetAgent>, new_agent: Pubkey) -> Result<()> {
+    require!(
+        new_agent != Pubkey::default(),
+        PolicyKitError::InvalidAgent
+    );
+
     let policy = &mut ctx.accounts.policy;
     let old_agent = policy.agent;
     policy.agent = new_agent;

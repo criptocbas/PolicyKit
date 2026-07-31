@@ -124,9 +124,11 @@ Wire with `createVercelAITools(agent, agent.actions)` / LangChain helpers from `
 ### Security model (agent integration)
 
 1. **Fund the policy vault**, not the agent key. Agent only needs fee SOL.  
-2. All vault outflows go through `execute_spend` (plugin methods).  
+2. All **vault** outflows go through `execute_spend` (plugin methods).  
 3. Always set `intentProgram` to the program the agent is about to use (Jupiter, etc.).  
 4. On-chain limits still apply even if intent is spoofed — see [docs/SECURITY.md](docs/SECURITY.md).  
+5. MVP: agent may only spend **`spend_mint`**; recover other vault mints with clawback.  
+6. The plugin does **not** sandbox other Agent Kit plugins — do not fund the agent wallet with spendable assets.  
 
 ### Demo failure paths (pitch video)
 

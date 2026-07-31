@@ -358,6 +358,21 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
     expect(good.ok).to.equal(true);
   });
 
+  it("previewSpend rejects non-spend_mint (SpendMintRequired)", async () => {
+    const { policy } = await setupConservativePolicy();
+    const data = await sdk.getPolicy(policy);
+    const otherMint = Keypair.generate().publicKey;
+    const bad = previewSpend(data, {
+      amount: ui(1),
+      mint: otherMint,
+      intentProgram: JUPITER,
+    });
+    expect(bad.ok).to.equal(false);
+    if (!bad.ok) {
+      expect(bad.errorName).to.equal("SpendMintRequired");
+    }
+  });
+
   it("vault ATA helper matches deposit target", async () => {
     const { policy } = await setupConservativePolicy();
     const vault = findVaultAta(policy, usdcMint);
@@ -373,6 +388,8 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
 
   it("plugin methods: executeSpendUnderPolicy success + ProgramNotAllowed", async () => {
     const { policy } = await setupConservativePolicy();
+    // Fresh fee SOL for agent as fee payer (long suite can leave low balance / stale state)
+    await airdrop(agent.publicKey, 2);
 
     // Minimal agent stub matching what methods() needs
     const agentWallet = {
@@ -392,7 +409,7 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
     const agentProvider = new anchor.AnchorProvider(
       connection,
       agentWallet as any,
-      { commitment: "confirmed" }
+      { commitment: "confirmed", preflightCommitment: "confirmed" }
     );
 
     const fakeAgent = {
@@ -465,6 +482,48 @@ describe("PolicyKit SDK + Agent Kit plugin", () => {
     expect(resultBad.status).to.equal("error");
     expect(resultBad.errorName).to.equal("ProgramNotAllowed");
     expect(resultBad.message).to.include("allowlist");
+  });
+
+  it("plugin preflight returns human errorTitle for over per-tx limit", async () => {
+    const { policy } = await setupConservativePolicy();
+    const agentWallet = {
+      publicKey: agent.publicKey,
+      payer: agent,
+      signTransaction: async (tx: any) => {
+        tx.partialSign(agent);
+        return tx;
+      },
+      signAllTransactions: async (txs: any[]) => {
+        txs.forEach((t) => t.partialSign(agent));
+        return txs;
+      },
+    };
+    const fakeAgent = {
+      connection,
+      wallet: agentWallet,
+      config: {},
+    } as any;
+
+    // clientSidePreflight only — no on-chain spend required for this assertion
+    const methodsPreflight = createPolicyKitMethods(
+      () => fakeAgent,
+      () =>
+        resolveConfig({
+          policy,
+          programId: sdk.programId,
+          defaultMint: usdcMint,
+          defaultIntentProgram: JUPITER,
+          clientSidePreflight: true,
+        })
+    );
+    const overTx = await methodsPreflight.executeSpendUnderPolicy({
+      amount: ui(100).toString(), // max per-tx is 20
+      destinationToken: agentUsdc.toBase58(),
+      intentProgram: JUPITER.toBase58(),
+    });
+    expect(overTx.status).to.equal("error");
+    expect(overTx.errorName).to.equal("ExceedsPerTransactionLimit");
+    expect(overTx.errorTitle).to.equal("Over per-tx limit");
   });
 
   it("plugin getPolicyStatus surfaces remaining budget", async () => {

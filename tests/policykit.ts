@@ -459,9 +459,17 @@ describe("policykit", () => {
   // Mint allowlist
   // -------------------------------------------------------------------------
 
-  it("rejects spend of non-allowlisted mint", async () => {
+  it("rejects spend of non-spend_mint even if allowlisted (SpendMintRequired)", async () => {
     const id = new BN(4);
-    const pda = await createPolicyWithParams(id, defaultCreateParams());
+    // Allowlist includes both mints — pre-fix hole would have allowed otherMint
+    // without daily caps; post-fix only spend_mint is spendable.
+    const pda = await createPolicyWithParams(
+      id,
+      defaultCreateParams({
+        mintAllowlistEnabled: true,
+        mintAllowlist: [usdcMint, otherMint],
+      })
+    );
     const vault = getAssociatedTokenAddressSync(otherMint, pda, true);
     await provider.sendAndConfirm(
       new anchor.web3.Transaction().add(
@@ -492,7 +500,116 @@ describe("policykit", () => {
       );
       expect.fail("should have failed");
     } catch (e) {
+      expectError(e, "SpendMintRequired");
+    }
+  });
+
+  it("rejects spend when spend_mint is not on mint allowlist", async () => {
+    const id = new BN(40);
+    const pda = await createPolicyWithParams(
+      id,
+      defaultCreateParams({
+        mintAllowlistEnabled: true,
+        mintAllowlist: [otherMint], // spend_mint (USDC) not listed
+      })
+    );
+    const vault = getAssociatedTokenAddressSync(usdcMint, pda, true);
+    await provider.sendAndConfirm(
+      new anchor.web3.Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          authority.publicKey,
+          vault,
+          pda,
+          usdcMint
+        )
+      ),
+      []
+    );
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(10));
+
+    try {
+      await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(1), JUPITER_V6);
+      expect.fail("should have failed");
+    } catch (e) {
       expectError(e, "MintNotAllowed");
+    }
+  });
+
+  it("authority can clawback non-spend_mint from vault", async () => {
+    const id = new BN(41);
+    const pda = await createPolicyWithParams(id, defaultCreateParams());
+    const vault = getAssociatedTokenAddressSync(otherMint, pda, true);
+    await provider.sendAndConfirm(
+      new anchor.web3.Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          authority.publicKey,
+          vault,
+          pda,
+          otherMint
+        )
+      ),
+      []
+    );
+    const authorityOther = getAssociatedTokenAddressSync(
+      otherMint,
+      authority.publicKey,
+      false
+    );
+    await deposit(pda, otherMint, authorityOther, vault, oneUsdc(10));
+
+    await program.methods
+      .clawback(oneUsdc(10))
+      .accounts({
+        authority: authority.publicKey,
+        policy: pda,
+        mint: otherMint,
+        vaultToken: vault,
+        destinationToken: authorityOther,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+
+    const vaultAfter = await getAccount(connection, vault);
+    expect(Number(vaultAfter.amount)).to.equal(0);
+  });
+
+  it("rejects spend to a destination owned by the policy PDA", async () => {
+    const id = new BN(42);
+    const pda = await createPolicyWithParams(id, defaultCreateParams());
+    const vault = getAssociatedTokenAddressSync(usdcMint, pda, true);
+    await provider.sendAndConfirm(
+      new anchor.web3.Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          authority.publicKey,
+          vault,
+          pda,
+          usdcMint
+        )
+      ),
+      []
+    );
+    await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(20));
+
+    try {
+      // destination = vault (policy-owned)
+      await executeSpend(pda, usdcMint, vault, vault, oneUsdc(1), JUPITER_V6);
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InvalidDestination");
+    }
+  });
+
+  it("rejects set_agent to the default public key", async () => {
+    const id = new BN(43);
+    const pda = await createPolicyWithParams(id, defaultCreateParams());
+    try {
+      await program.methods
+        .setAgent(PublicKey.default)
+        .accounts({ authority: authority.publicKey, policy: pda })
+        .rpc();
+      expect.fail("should have failed");
+    } catch (e) {
+      expectError(e, "InvalidAgent");
     }
   });
 

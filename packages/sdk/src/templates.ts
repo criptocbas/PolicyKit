@@ -48,6 +48,11 @@ export function conservativeTradingTemplate(
  */
 export function x402PaymentsTemplate(ctx: TemplateContext): CreatePolicyParams {
   const d = ctx.decimals ?? 6;
+  // Default Jupiter so allowlist is never enabled+empty; pass extraPrograms to extend.
+  const programs =
+    ctx.extraPrograms && ctx.extraPrograms.length > 0
+      ? ctx.extraPrograms
+      : [KNOWN_PROGRAMS.JUPITER_V6];
   return {
     agent: ctx.agent,
     expiresAt: 0,
@@ -56,8 +61,8 @@ export function x402PaymentsTemplate(ctx: TemplateContext): CreatePolicyParams {
     maxPerDay: ui(25, d),
     maxActionsPerWindow: 30,
     windowSeconds: 60,
-    programAllowlistEnabled: (ctx.extraPrograms?.length ?? 0) > 0,
-    programAllowlist: ctx.extraPrograms ?? [],
+    programAllowlistEnabled: true,
+    programAllowlist: programs,
     programDenylistEnabled: false,
     programDenylist: [],
     mintAllowlistEnabled: true,

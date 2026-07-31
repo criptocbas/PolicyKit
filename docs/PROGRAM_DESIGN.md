@@ -75,22 +75,26 @@ Full CPI mediation into arbitrary DeFi programs is a deliberate post-MVP hardeni
 | `set_agent` | authority | Rotate agent pubkey |
 | `pause_policy` | authority | Freeze spends |
 | `unpause_policy` | authority | Resume spends |
-| `deposit` | depositor | Transfer tokens into vault ATA (`init_if_needed` vault ATA) |
-| `clawback` | authority | Withdraw from vault to authority’s token account |
-| `execute_spend` | agent | Policy-checked transfer from vault → destination |
+| `deposit` | depositor | Transfer tokens into vault (client must pre-create vault ATA owned by policy) |
+| `clawback` | authority | Withdraw any mint from vault to authority’s token account |
+| `execute_spend` | agent | Policy-checked transfer of **`spend_mint` only** vault → destination |
 
 ### `execute_spend` check order
 
 1. Signer is `policy.agent`
 2. Not paused; not expired
 3. Refresh day + rate windows from `Clock`
-4. Program allowlist / denylist vs `intent_program`
-5. Mint allowlist vs transferred mint
-6. Rate limit (`actions_in_window < max`)
-7. If mint == `spend_mint`: per-tx limit, daily limit; update counters
-8. Increment action counter
-9. PDA-signed `transfer_checked` CPI
-10. Emit `SpendExecuted`
+4. **`mint == spend_mint`** (`SpendMintRequired`)
+5. Program allowlist / denylist vs `intent_program`
+6. Mint allowlist vs transferred mint
+7. Rate limit (`actions_in_window < max`)
+8. Per-tx + daily spend limits; update counters
+9. Destination token owner ≠ policy PDA
+10. Balance check
+11. PDA-signed classic SPL **`Transfer`** CPI (not Token-2022 `transfer_checked`)
+12. Emit `SpendExecuted`
+
+Mistaken non-`spend_mint` deposits are recovered with **`clawback`**, not agent spend.
 
 ---
 
@@ -109,12 +113,13 @@ See `error.rs` — every rejection path has a distinct, client-readable code.
 
 ## Token program note
 
-MVP uses **classic SPL Token** (`Tokenkeg…`) only. Token-2022 is deferred because current platform-tools (rustc 1.84) cannot compile the `anchor-spl` / `solana-zk-sdk` graph (edition2024). Transfers are raw `spl-token` CPIs validated in-handler (no `anchor-spl` account types).
+MVP uses **classic SPL Token** (`Tokenkeg…`) only. Token-2022 is deferred because current platform-tools (rustc 1.84) cannot compile the `anchor-spl` / `solana-zk-sdk` graph (edition2024). Transfers use raw `spl_token::instruction::transfer` CPIs validated in-handler (no `anchor-spl` account types). Vault ATAs are created **client-side** before deposit.
 
 ## Out of scope for this MVP program
 
 - Hierarchical / parent-child policies
 - Token-2022 transfer-hook enforcement
 - Full CPI proxy into Jupiter/etc.
+- Multi-asset agent spends (only `spend_mint` via `execute_spend`)
 - Multi-sig / Squads veto
 - Closing/realloc lifecycle UX beyond clawback + pause

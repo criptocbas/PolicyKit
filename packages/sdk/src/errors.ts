@@ -24,6 +24,9 @@ export const POLICYKIT_ERROR_CODES = {
   InsufficientVaultBalance: 6018,
   MintMismatch: 6019,
   InvalidVaultAuthority: 6020,
+  SpendMintRequired: 6021,
+  InvalidAgent: 6022,
+  InvalidDestination: 6023,
 } as const;
 
 export type PolicyKitErrorName = keyof typeof POLICYKIT_ERROR_CODES;
@@ -50,6 +53,11 @@ export const POLICYKIT_ERROR_MESSAGES: Record<PolicyKitErrorName, string> = {
   InsufficientVaultBalance: "Policy vault does not have enough tokens for this spend.",
   MintMismatch: "Token account mint does not match the expected mint.",
   InvalidVaultAuthority: "Vault token account authority must be the policy PDA.",
+  SpendMintRequired:
+    "Only the policy spend_mint may be transferred via execute_spend.",
+  InvalidAgent: "Agent pubkey must not be the default public key.",
+  InvalidDestination:
+    "Destination token account must not be owned by the policy PDA.",
 };
 
 /** Demo-friendly short titles for pitch / UI. */
@@ -75,6 +83,9 @@ export const POLICYKIT_ERROR_TITLES: Record<PolicyKitErrorName, string> = {
   InsufficientVaultBalance: "Insufficient vault balance",
   MintMismatch: "Mint mismatch",
   InvalidVaultAuthority: "Invalid vault authority",
+  SpendMintRequired: "Wrong mint",
+  InvalidAgent: "Invalid agent",
+  InvalidDestination: "Invalid destination",
 };
 
 const CODE_TO_NAME = Object.fromEntries(

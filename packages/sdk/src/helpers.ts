@@ -139,6 +139,14 @@ export function previewSpend(
   if (isExpired(p, now)) {
     return { ok: false, reason: "Policy has expired", errorName: "PolicyExpired" };
   }
+  // MVP: only spend_mint may be spent (matches on-chain SpendMintRequired).
+  if (!args.mint.equals(p.spendMint)) {
+    return {
+      ok: false,
+      reason: "Only the policy spend_mint may be transferred via execute_spend",
+      errorName: "SpendMintRequired",
+    };
+  }
   if (p.programAllowlistEnabled) {
     const allowed = p.programAllowlist.some((x) => x.equals(args.intentProgram));
     if (!allowed) {

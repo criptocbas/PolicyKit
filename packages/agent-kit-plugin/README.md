@@ -28,4 +28,11 @@ await agent.methods.executeSpendUnderPolicy({
 
 **Actions:** `POLICYKIT_EXECUTE_SPEND`, `POLICYKIT_GET_STATUS`, `POLICYKIT_CHECK_SPEND`
 
-See root [README.md](../../README.md).
+### Security ops
+
+- Gates **vault** spends only via on-chain `execute_spend` — not a whole-agent sandbox.
+- Fund the **policy vault**, not the agent key (agent needs fee SOL only).
+- Avoid loading unrestricted transfer/swap plugins that move agent-held balances if you rely on PolicyKit as the spend control.
+- Always pass `intentProgram` (or set `defaultIntentProgram`) for allowlist checks.
+
+See root [README.md](../../README.md) and [docs/SECURITY.md](../../docs/SECURITY.md).

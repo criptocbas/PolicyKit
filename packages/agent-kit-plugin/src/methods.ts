@@ -7,9 +7,11 @@ import {
 import {
   PolicyKitClient,
   PolicyKitError,
+  POLICYKIT_ERROR_TITLES,
   previewSpend,
   toBn,
   toPolicyKitError,
+  type PolicyKitErrorName,
   type PolicyStatus,
 } from "@policykit/sdk";
 import type { SolanaAgentKit } from "solana-agent-kit";
@@ -169,11 +171,15 @@ export function createPolicyKitMethods(
           vaultBalance,
         });
         if (!preview.ok) {
+          const title =
+            POLICYKIT_ERROR_TITLES[
+              preview.errorName as PolicyKitErrorName
+            ] ?? preview.errorName;
           return {
             status: "error",
             message: preview.reason,
             errorName: preview.errorName,
-            errorTitle: preview.errorName,
+            errorTitle: title,
             remainingDaily:
               (await c.remainingDaily(cfg.policy))?.toString() ?? null,
             remainingActions: await c.remainingActions(cfg.policy),
