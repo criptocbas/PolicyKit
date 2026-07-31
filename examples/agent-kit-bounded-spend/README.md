@@ -11,7 +11,7 @@
 
 ## Prerequisites
 
-- Node 20+, yarn  
+- Node **22+**, yarn (`solana-agent-kit` engines require ≥22)  
 - Built monorepo packages: from repo root `yarn build:packages`  
 - Devnet policy: `yarn agent:setup` (writes `proof/live-config.json`) **or** create via dashboard  
 
