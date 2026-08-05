@@ -52,12 +52,40 @@ Updates `proof/live-feed.json` and `apps/dashboard/public/proof/live-feed.json`.
 
 ## Schedule (local cron — preferred)
 
+```bash
+# Dry-run (prints the crontab line)
+yarn agent:cron
+
+# Install every-6h tick for this checkout
+bash scripts/live-agent/install-cron.sh --install
+```
+
+Or hand-edit crontab:
+
 ```cron
 # Every 6 hours
 0 */6 * * * cd /path/to/PolicyKit && /usr/bin/yarn agent:tick >> /tmp/policykit-tick.log 2>&1
 ```
 
 Do **not** put mainnet keys in GitHub Actions. Prefer local cron with a throwaway **devnet-only** agent key.
+
+### Feed format
+
+`proof/live-feed.json` (and the dashboard public copy) is a **versioned document**:
+
+```json
+{
+  "version": 1,
+  "updatedAt": "ISO-8601",
+  "cluster": "devnet",
+  "policy": "<policy pda>",
+  "programId": "<program id>",
+  "tickCount": 12,
+  "events": [ /* newest first */ ]
+}
+```
+
+The dashboard shows **freshness** from `updatedAt` (live &lt; 6h, recent &lt; 48h, else stale).
 
 ## GHA design note (not implemented — needs EngLead OK)
 

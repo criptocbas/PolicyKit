@@ -6,6 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { PolicyStatus, MaxDamageReport } from "@policykit/sdk";
 import BN from "bn.js";
 import { PublicPolicyView } from "@/components/public-policy-view";
+import { LiveAgentFeed } from "@/components/live-agent-feed";
 import { fetchPublicPolicy } from "@/lib/readonly-client";
 import { CLUSTER, PROGRAM_ID } from "@/lib/config";
 import { shortKey } from "@/lib/format";
@@ -93,6 +94,7 @@ export default function PublicPolicyPage() {
           error={error}
           loading={loading}
         />
+        <LiveAgentFeed filterPolicy={address} compact />
         <p className="text-center text-xs text-mist-500">
           <Link href="/" className="text-mint-400 hover:underline">
             Open control room

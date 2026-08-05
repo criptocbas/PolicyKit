@@ -1,44 +1,61 @@
 # Agent Kit + PolicyKit (bounded spend)
 
-**15-minute path:** create/load a policy vault, attach the PolicyKit plugin, spend only under rules, see clean rejects.
+**Gold-standard 15-minute path:** load a policy vault, attach the PolicyKit plugin, spend only under rules, see clean on-chain rejects.
+
+This is the artifact that makes edge **A** real: developers copy this pattern, not raw SPL transfers.
 
 ## Security ops (read first)
 
 1. **Fund the policy vault**, not the agent wallet (agent needs fee SOL only).  
-2. Do **not** load unrestricted SPL transfer plugins alongside PolicyKit if you rely on it as the spend control.  
+2. Do **not** co-load unrestricted SPL transfer plugins if PolicyKit is your spend control.  
 3. Prefer destination + program allowlists enabled.  
-4. Authority keeps pause (circuit breaker) + clawback.
+4. Authority keeps **pause** (circuit breaker) + **clawback**.
 
 ## Prerequisites
 
-- Node **22+**, yarn (`solana-agent-kit` engines require ≥22)  
-- Built monorepo packages: from repo root `yarn build:packages`  
-- Devnet policy: `yarn agent:setup` (writes `proof/live-config.json`) **or** create via dashboard  
+| Need | Why |
+|------|-----|
+| Node **22+** | `solana-agent-kit` engines |
+| Monorepo packages built | `yarn build:packages` from repo root |
+| Devnet live policy | `yarn agent:setup` (writes `proof/live-config.json` + agent key) |
 
-## Run (from this directory)
+## Run
 
 ```bash
-# From monorepo root first:
-yarn build:packages
-yarn agent:setup   # once — needs authority SOL on devnet
-
-cd examples/agent-kit-bounded-spend
-cp .env.example .env
-# Edit if needed
+# From monorepo root (once):
 yarn install
-yarn start
+yarn build:packages
+yarn agent:setup          # needs authority SOL on devnet
+
+# From monorepo root (preferred — workspace links the SDK/plugin):
+yarn example:agent-kit
+
+# Or:
+cd examples/agent-kit-bounded-spend
+cp .env.example .env      # optional overrides
+yarn start                # after root yarn install
 ```
 
-## What it does
+## What it proves
 
-1. Loads live policy from `proof/live-config.json`  
-2. Attaches `@policykit/agent-kit-plugin`  
-3. Prints status / max-damage summary  
-4. Allowed spend under policy  
-5. Intentional Drift intent → `ProgramNotAllowed`  
+| Step | Expected |
+|------|----------|
+| Status + max damage | Remaining budget / worst-case if key stolen |
+| Allowed spend | Jupiter intent → agent ATA succeeds (or budget bound) |
+| Rogue program | Drift intent → `ProgramNotAllowed` |
+| Rogue destination | Outsider wallet → `DestinationNotAllowed` |
+
+## Env
+
+| Variable | Default |
+|----------|---------|
+| `RPC_URL` | `https://api.devnet.solana.com` |
+| `LIVE_CONFIG` | `../../proof/live-config.json` |
+| `AGENT_KEY` | `../../proof/.agent-keypair.json` |
 
 ## Links
 
 - Public policy page: `/p/<policy>` on the dashboard  
-- Competitive notes: `docs/COMPETITIVE.md`  
-- Max damage: `docs/MAX_DAMAGE.md`  
+- Continuous adversary ticks: `yarn agent:tick`  
+- Competitive notes: [`docs/COMPETITIVE.md`](../../docs/COMPETITIVE.md)  
+- Ecosystem contribution path: [`docs/ECOSYSTEM.md`](../../docs/ECOSYSTEM.md)  

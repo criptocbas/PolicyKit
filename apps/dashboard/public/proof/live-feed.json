@@ -1,70 +1,112 @@
-[
-  {
-    "ts": "2026-07-31T23:30:47.447Z",
-    "kind": "allowed",
-    "ok": true,
-    "signature": "4ZKsBRjCNQvCk6zZQXij4ed97u1KQzTLzRfRJKuKiuxQ6iY1677Uvw6MRfkv983LgHQuuWoocK2NzVc4CZzyDtLJ",
-    "remainingDaily": "48000000",
-    "message": "Allowed spend (Jupiter intent → agent ATA)",
-    "explorer": {
-      "tx": "https://solscan.io/tx/4ZKsBRjCNQvCk6zZQXij4ed97u1KQzTLzRfRJKuKiuxQ6iY1677Uvw6MRfkv983LgHQuuWoocK2NzVc4CZzyDtLJ?cluster=devnet",
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+{
+  "version": 1,
+  "updatedAt": "2026-08-05T01:52:00.476Z",
+  "cluster": "devnet",
+  "policy": "GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n",
+  "programId": "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27",
+  "tickCount": 9,
+  "events": [
+    {
+      "ts": "2026-08-05T01:51:59.826Z",
+      "kind": "allowed",
+      "ok": true,
+      "signature": "3zWJdqyhCou9CQJ74ofaviuhgW7njEkvk161bM7Mr9ezgPcKC4yoqtzxgTAZBYzUC8EkKVdsHobKYpe9omwfoSvv",
+      "remainingDaily": "49000000",
+      "message": "Allowed spend (Jupiter intent → agent ATA)",
+      "explorer": {
+        "tx": "https://solscan.io/tx/3zWJdqyhCou9CQJ74ofaviuhgW7njEkvk161bM7Mr9ezgPcKC4yoqtzxgTAZBYzUC8EkKVdsHobKYpe9omwfoSvv?cluster=devnet",
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-08-05T01:52:00.148Z",
+      "kind": "reject_program",
+      "ok": true,
+      "errorName": "ProgramNotAllowed",
+      "errorTitle": "Program not allowed",
+      "message": "Rogue program intent rejected (ProgramNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-08-05T01:52:00.475Z",
+      "kind": "reject_dest",
+      "ok": true,
+      "errorName": "DestinationNotAllowed",
+      "errorTitle": "Destination not allowed",
+      "message": "Rogue destination rejected (DestinationNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:30:47.447Z",
+      "kind": "allowed",
+      "ok": true,
+      "signature": "4ZKsBRjCNQvCk6zZQXij4ed97u1KQzTLzRfRJKuKiuxQ6iY1677Uvw6MRfkv983LgHQuuWoocK2NzVc4CZzyDtLJ",
+      "remainingDaily": "48000000",
+      "message": "Allowed spend (Jupiter intent → agent ATA)",
+      "explorer": {
+        "tx": "https://solscan.io/tx/4ZKsBRjCNQvCk6zZQXij4ed97u1KQzTLzRfRJKuKiuxQ6iY1677Uvw6MRfkv983LgHQuuWoocK2NzVc4CZzyDtLJ?cluster=devnet",
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:30:47.607Z",
+      "kind": "reject_program",
+      "ok": true,
+      "errorName": "ProgramNotAllowed",
+      "errorTitle": "Program not allowed",
+      "message": "Rogue program intent rejected (ProgramNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:30:47.764Z",
+      "kind": "reject_dest",
+      "ok": true,
+      "errorName": "DestinationNotAllowed",
+      "errorTitle": "Destination not allowed",
+      "message": "Rogue destination rejected (DestinationNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:14:54.162Z",
+      "kind": "allowed",
+      "ok": true,
+      "signature": "4iv57oR8AtV3avd8DtEsH5dbLZjCJZQGcaPnpoCCyMZux1aRMwk7Krd2X6KL2AmTahdSJUprL8Dtd6kY6vWfhKPC",
+      "remainingDaily": "49000000",
+      "message": "Allowed spend (Jupiter intent → agent ATA)",
+      "explorer": {
+        "tx": "https://solscan.io/tx/4iv57oR8AtV3avd8DtEsH5dbLZjCJZQGcaPnpoCCyMZux1aRMwk7Krd2X6KL2AmTahdSJUprL8Dtd6kY6vWfhKPC?cluster=devnet",
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:14:54.333Z",
+      "kind": "reject_program",
+      "ok": true,
+      "errorName": "ProgramNotAllowed",
+      "errorTitle": "Program not allowed",
+      "message": "Rogue program intent rejected (ProgramNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
+    },
+    {
+      "ts": "2026-07-31T23:14:54.502Z",
+      "kind": "reject_dest",
+      "ok": true,
+      "errorName": "DestinationNotAllowed",
+      "errorTitle": "Destination not allowed",
+      "message": "Rogue destination rejected (DestinationNotAllowed)",
+      "explorer": {
+        "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
+      }
     }
-  },
-  {
-    "ts": "2026-07-31T23:30:47.607Z",
-    "kind": "reject_program",
-    "ok": true,
-    "errorName": "ProgramNotAllowed",
-    "errorTitle": "Program not allowed",
-    "message": "Rogue program intent rejected (ProgramNotAllowed)",
-    "explorer": {
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
-    }
-  },
-  {
-    "ts": "2026-07-31T23:30:47.764Z",
-    "kind": "reject_dest",
-    "ok": true,
-    "errorName": "DestinationNotAllowed",
-    "errorTitle": "Destination not allowed",
-    "message": "Rogue destination rejected (DestinationNotAllowed)",
-    "explorer": {
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
-    }
-  },
-  {
-    "ts": "2026-07-31T23:14:54.162Z",
-    "kind": "allowed",
-    "ok": true,
-    "signature": "4iv57oR8AtV3avd8DtEsH5dbLZjCJZQGcaPnpoCCyMZux1aRMwk7Krd2X6KL2AmTahdSJUprL8Dtd6kY6vWfhKPC",
-    "remainingDaily": "49000000",
-    "message": "Allowed spend (Jupiter intent → agent ATA)",
-    "explorer": {
-      "tx": "https://solscan.io/tx/4iv57oR8AtV3avd8DtEsH5dbLZjCJZQGcaPnpoCCyMZux1aRMwk7Krd2X6KL2AmTahdSJUprL8Dtd6kY6vWfhKPC?cluster=devnet",
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
-    }
-  },
-  {
-    "ts": "2026-07-31T23:14:54.333Z",
-    "kind": "reject_program",
-    "ok": true,
-    "errorName": "ProgramNotAllowed",
-    "errorTitle": "Program not allowed",
-    "message": "Rogue program intent rejected (ProgramNotAllowed)",
-    "explorer": {
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
-    }
-  },
-  {
-    "ts": "2026-07-31T23:14:54.502Z",
-    "kind": "reject_dest",
-    "ok": true,
-    "errorName": "DestinationNotAllowed",
-    "errorTitle": "Destination not allowed",
-    "message": "Rogue destination rejected (DestinationNotAllowed)",
-    "explorer": {
-      "policy": "https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet"
-    }
-  }
-]
+  ]
+}

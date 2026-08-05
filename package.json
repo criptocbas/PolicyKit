@@ -4,7 +4,8 @@
   "license": "MIT",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "examples/*"
   ],
   "scripts": {
     "build:packages": "yarn workspace @policykit/sdk build && yarn workspace @policykit/agent-kit-plugin build",
@@ -22,7 +23,9 @@
     "deploy:devnet": "bash scripts/deploy-devnet.sh",
     "demo:devnet": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/devnet-live-demo.ts",
     "agent:setup": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/setup-live-policy.ts",
-    "agent:tick": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/run-tick.ts"
+    "agent:tick": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/run-tick.ts",
+    "agent:cron": "bash scripts/live-agent/install-cron.sh",
+    "example:agent-kit": "yarn build:packages && yarn workspace @policykit/example-agent-kit-bounded-spend start"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

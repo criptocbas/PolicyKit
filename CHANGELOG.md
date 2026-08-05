@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Versioned live adversary feed document (`updatedAt`, policy, events) for professional proof UX.
+- SDK `assessFreshness` / `parseLiveFeed` helpers + unit tests.
+- Dashboard freshness badges (live / recent / stale) on adversary feed and snapshot proof.
+- Public policy page embeds filtered adversary ticks.
+- `yarn agent:cron` helper and improved Agent Kit bounded-spend example (status, max damage, dest reject).
+
+### Changed
+
+- Live proof card labeled as snapshot proof; continuous proof is the adversary feed.
+
 ## [0.4.0] - 2026-07-31
 
 ### Added

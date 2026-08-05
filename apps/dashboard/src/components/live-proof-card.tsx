@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { assessFreshness, freshnessBadgeVariant } from "@policykit/sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,8 @@ export function LiveProofCard({
     };
   }, []);
 
+  const freshness = assessFreshness(proof?.createdAt);
+
   return (
     <Card className="border-mint-500/25">
       <CardHeader>
@@ -82,16 +85,22 @@ export function LiveProofCard({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Radio className="h-4 w-4 text-mint-400" />
-              Live proof (devnet)
+              Snapshot proof (devnet)
             </CardTitle>
             <CardDescription>
-              Public on-chain run from{" "}
-              <code className="text-mist-400">yarn demo:devnet</code>. App
-              cluster: <span className="font-mono">{CLUSTER}</span>.
+              One-shot on-chain run from{" "}
+              <code className="text-mist-400">yarn demo:devnet</code>. Continuous
+              adversary: live feed card. App cluster:{" "}
+              <span className="font-mono">{CLUSTER}</span>.
             </CardDescription>
           </div>
           {proof && (
-            <Badge variant="success">{proof.cluster || "devnet"}</Badge>
+            <div className="flex flex-col items-end gap-1">
+              <Badge variant="success">{proof.cluster || "devnet"}</Badge>
+              <Badge variant={freshnessBadgeVariant(freshness.level)}>
+                {freshness.label}
+              </Badge>
+            </div>
           )}
         </div>
       </CardHeader>
@@ -113,6 +122,7 @@ export function LiveProofCard({
         )}
         {proof && (
           <>
+            <p className="text-xs text-mist-500">{freshness.detail}</p>
             <Row
               label="Policy"
               value={

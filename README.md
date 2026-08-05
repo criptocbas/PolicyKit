@@ -77,12 +77,16 @@ Or: `yarn ci:local` (typecheck + unit + integration).
 yarn deploy:devnet    # upgrade program (needs SOL + upgrade authority)
 yarn agent:setup      # create live policy + agent key (gitignored)
 yarn agent:tick       # allowed spend + 2 expected rejects → live-feed.json
-yarn demo:devnet      # one-shot proof (optional)
+yarn agent:cron       # print / install local cron for ticks
+yarn demo:devnet      # one-shot snapshot proof (optional)
+yarn example:agent-kit  # gold-standard Agent Kit path
 yarn dev:dashboard    # Live adversary feed + /p/<policy>
 ```
 
 Schedule ticks: [scripts/live-agent/README.md](./scripts/live-agent/README.md).  
 Details: [docs/DEVNET.md](./docs/DEVNET.md).
+
+**Professional proof loop:** keep `yarn agent:tick` on a schedule so the public feed stays **live** (dashboard badges show stale after 48h). Judges open `/p/<policy>` — no wallet, max-damage + recent ticks.
 
 ### Dependency pins (platform-tools rustc 1.84)
 

@@ -291,14 +291,22 @@ async function main() {
     console.log(ok ? "REJECT DEST ok" : "REJECT DEST unexpected", err.errorName);
   }
 
-  appendFeed(events);
+  appendFeed(events, {
+    cluster: cfg.cluster,
+    policy: cfg.policy,
+    programId: cfg.programId,
+  });
 
   const failed = events.some((e) => !e.ok);
   if (failed) {
     console.error("Tick finished with unexpected failures");
     process.exit(1);
   }
-  console.log("Tick OK —", events.length, "events written to proof/live-feed.json");
+  console.log(
+    "Tick OK —",
+    events.length,
+    "events this run · feed written to proof/live-feed.json + apps/dashboard/public/proof/"
+  );
 }
 
 main().catch((e) => {

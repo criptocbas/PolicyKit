@@ -64,6 +64,17 @@ export type TickEvent = {
   explorer?: { tx?: string; policy: string };
 };
 
+/** Versioned feed document written by agent:tick (array still accepted by dashboard). */
+export type LiveFeedDocument = {
+  version: 1;
+  updatedAt: string;
+  cluster: string;
+  policy: string;
+  programId: string;
+  tickCount: number;
+  events: TickEvent[];
+};
+
 export function loadKeypair(filePath: string): Keypair {
   const resolved = filePath.startsWith("~")
     ? path.join(os.homedir(), filePath.slice(1))
@@ -104,19 +115,63 @@ export function writeLiveConfig(cfg: LiveConfig): void {
 export function loadFeed(): TickEvent[] {
   try {
     if (!fs.existsSync(LIVE_FEED_PATH)) return [];
-    return JSON.parse(fs.readFileSync(LIVE_FEED_PATH, "utf8")) as TickEvent[];
+    const raw = JSON.parse(fs.readFileSync(LIVE_FEED_PATH, "utf8")) as unknown;
+    if (Array.isArray(raw)) return raw as TickEvent[];
+    if (
+      raw &&
+      typeof raw === "object" &&
+      Array.isArray((raw as LiveFeedDocument).events)
+    ) {
+      return (raw as LiveFeedDocument).events;
+    }
+    return [];
   } catch {
     return [];
   }
 }
 
-export function appendFeed(events: TickEvent[]): TickEvent[] {
+/**
+ * Prepend tick events and rewrite feed as a versioned document (plus public copy).
+ * Pass meta from live-config so the dashboard can show freshness without guessing.
+ */
+export function appendFeed(
+  events: TickEvent[],
+  meta?: Pick<LiveConfig, "cluster" | "policy" | "programId">
+): TickEvent[] {
   const prev = loadFeed();
   const next = [...events, ...prev].slice(0, 100);
+  const cfg = meta ?? (() => {
+    try {
+      return loadLiveConfig();
+    } catch {
+      return null;
+    }
+  })();
+  const doc: LiveFeedDocument = {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    cluster: cfg?.cluster ?? "devnet",
+    policy: cfg?.policy ?? next[0]?.explorer?.policy ?? "",
+    programId: cfg?.programId ?? "",
+    tickCount: next.length,
+    events: next,
+  };
+  // Prefer policy pubkey over explorer URL if we only had URL
+  if (cfg?.policy) {
+    doc.policy = cfg.policy;
+  } else if (doc.policy.startsWith("http")) {
+    try {
+      const m = doc.policy.match(/account\/([1-9A-HJ-NP-Za-km-z]+)/);
+      if (m) doc.policy = m[1];
+    } catch {
+      /* keep */
+    }
+  }
   fs.mkdirSync(PROOF_DIR, { recursive: true });
   fs.mkdirSync(PUBLIC_PROOF_DIR, { recursive: true });
-  fs.writeFileSync(LIVE_FEED_PATH, JSON.stringify(next, null, 2));
-  fs.writeFileSync(LIVE_FEED_PUBLIC_PATH, JSON.stringify(next, null, 2));
+  const body = JSON.stringify(doc, null, 2);
+  fs.writeFileSync(LIVE_FEED_PATH, body);
+  fs.writeFileSync(LIVE_FEED_PUBLIC_PATH, body);
   return next;
 }
 

@@ -1,14 +1,18 @@
 {
-  "name": "policykit-agent-kit-bounded-spend-example",
+  "name": "@policykit/example-agent-kit-bounded-spend",
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "start": "ts-node --compiler-options {\"module\":\"commonjs\"} src/index.ts"
+    "start": "ts-node --compiler-options '{\"module\":\"commonjs\"}' src/index.ts"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
     "@policykit/agent-kit-plugin": "0.1.0",
     "@policykit/sdk": "0.1.0",
+    "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.98.4",
     "bn.js": "^5.2.5",
     "dotenv": "^16.4.5",

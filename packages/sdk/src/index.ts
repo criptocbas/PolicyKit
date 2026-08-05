@@ -51,6 +51,17 @@ export {
 export { computeMaxDamage, type MaxDamageReport } from "./max-damage";
 
 export {
+  assessFreshness,
+  formatRelativeAge,
+  freshnessBadgeVariant,
+  parseLiveFeed,
+  FRESHNESS_MS,
+  type Freshness,
+  type FreshnessLevel,
+  type LiveFeedPayload,
+} from "./feed-freshness";
+
+export {
   POLICY_TEMPLATES,
   conservativeTradingTemplate,
   x402PaymentsTemplate,

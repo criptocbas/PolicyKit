@@ -1,22 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  assessFreshness,
+  freshnessBadgeVariant,
+  parseLiveFeed,
+  type LiveFeedPayload,
+} from "@policykit/sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Bot } from "lucide-react";
 import Link from "next/link";
 
-type TickEvent = {
-  ts: string;
-  kind: string;
-  ok: boolean;
-  errorName?: string;
-  errorTitle?: string;
-  signature?: string;
-  remainingDaily?: string | null;
-  message?: string;
-  explorer?: { tx?: string; policy?: string };
-};
+type TickEvent = LiveFeedPayload["events"][number];
 
 function badgeVariant(
   e: TickEvent
@@ -26,8 +22,15 @@ function badgeVariant(
   return "danger";
 }
 
-export function LiveAgentFeed() {
-  const [events, setEvents] = useState<TickEvent[]>([]);
+export function LiveAgentFeed({
+  /** When set, only show ticks for this policy (public page). */
+  filterPolicy,
+  compact,
+}: {
+  filterPolicy?: string;
+  compact?: boolean;
+} = {}) {
+  const [feed, setFeed] = useState<LiveFeedPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,27 +42,23 @@ export function LiveAgentFeed() {
         const res = await fetch("/proof/live-feed.json", { cache: "no-store" });
         if (!res.ok) {
           throw new Error(
-            "No live feed published yet. From repo root: yarn agent:setup && yarn agent:tick (see scripts/live-agent/README.md)."
+            "No live feed published yet. From repo root: yarn agent:setup && yarn agent:tick."
           );
         }
         const data: unknown = await res.json();
-        const list = Array.isArray(data)
-          ? (data as TickEvent[])
-          : Array.isArray((data as { events?: TickEvent[] })?.events)
-            ? (data as { events: TickEvent[] }).events
-            : null;
-        if (!list) {
+        const parsed = parseLiveFeed(data);
+        if (!parsed.events.length && !parsed.updatedAt) {
           throw new Error(
-            "live-feed.json has unexpected shape (expected a tick array)."
+            "live-feed.json is empty. Run yarn agent:tick to publish allowed + reject samples."
           );
         }
         if (!cancelled) {
-          setEvents(list);
+          setFeed(parsed);
           setError(null);
         }
       } catch (e: unknown) {
         if (!cancelled) {
-          setEvents([]);
+          setFeed(null);
           setError(e instanceof Error ? e.message : "Feed unavailable");
         }
       } finally {
@@ -71,8 +70,18 @@ export function LiveAgentFeed() {
     };
   }, []);
 
-  const policyFromFeed = events.find((e) => e.explorer?.policy)?.explorer
-    ?.policy;
+  let events = feed?.events ?? [];
+  if (filterPolicy && events.length) {
+    events = events.filter((e) => {
+      if (feed?.policy && feed.policy === filterPolicy) return true;
+      const url = e.explorer?.policy ?? "";
+      return url.includes(filterPolicy);
+    });
+  }
+
+  const freshness = assessFreshness(feed?.updatedAt ?? events[0]?.ts);
+  const policyPda = feed?.policy ?? null;
+  const limit = compact ? 9 : 24;
 
   return (
     <Card className="border-mint-500/20">
@@ -85,11 +94,27 @@ export function LiveAgentFeed() {
             </CardTitle>
             <CardDescription>
               Public agent: allowed spend + rogue program + rogue destination.
+              {freshness.level !== "unknown" && (
+                <span className="mt-1 block text-xs text-mist-500">
+                  {freshness.detail}
+                </span>
+              )}
             </CardDescription>
           </div>
-          {events.length > 0 && (
-            <Badge variant="success">{events.length} ticks</Badge>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            {feed && (
+              <Badge variant={freshnessBadgeVariant(freshness.level)}>
+                {freshness.level === "live"
+                  ? `Live · ${freshness.label}`
+                  : freshness.level === "stale"
+                    ? `Stale · ${freshness.label}`
+                    : freshness.label}
+              </Badge>
+            )}
+            {events.length > 0 && (
+              <Badge variant="muted">{events.length} events</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -100,7 +125,7 @@ export function LiveAgentFeed() {
           <div className="space-y-2 text-sm text-mist-500">
             <p>{error}</p>
             <p className="text-xs text-mist-600">
-              After ticks land, this card auto-fills from{" "}
+              After ticks land, this card fills from{" "}
               <code className="text-mist-400">public/proof/live-feed.json</code>
               .
             </p>
@@ -108,13 +133,13 @@ export function LiveAgentFeed() {
         )}
         {!loading && !error && events.length === 0 && (
           <p className="text-sm text-mist-500">
-            Feed file is empty. Run{" "}
-            <code className="text-mist-300">yarn agent:tick</code> to publish
-            allowed + reject samples.
+            {filterPolicy
+              ? "No ticks for this policy in the published feed yet."
+              : "Feed file is empty. Run yarn agent:tick to publish samples."}
           </p>
         )}
         <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto">
-          {events.slice(0, 24).map((e, i) => (
+          {events.slice(0, limit).map((e, i) => (
             <li
               key={`${e.ts}-${i}`}
               className="rounded-lg border border-ink-600/70 bg-ink-950/40 p-2.5 text-sm"
@@ -144,16 +169,36 @@ export function LiveAgentFeed() {
             </li>
           ))}
         </ul>
-        {policyFromFeed && (
+        {(policyPda || events.some((e) => e.explorer?.policy)) && (
           <p className="mt-3 text-xs text-mist-500">
-            <a
-              href={policyFromFeed}
-              target="_blank"
-              rel="noreferrer"
-              className="text-mint-400 hover:underline"
-            >
-              Policy on Solscan
-            </a>
+            {policyPda ? (
+              <>
+                <Link
+                  href={`/p/${policyPda}`}
+                  className="text-mint-400 hover:underline"
+                >
+                  Public max-damage page
+                </Link>
+                {" · "}
+                <a
+                  href={`https://solscan.io/account/${policyPda}?cluster=devnet`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-mint-400 hover:underline"
+                >
+                  Solscan
+                </a>
+              </>
+            ) : (
+              <a
+                href={events.find((e) => e.explorer?.policy)?.explorer?.policy}
+                target="_blank"
+                rel="noreferrer"
+                className="text-mint-400 hover:underline"
+              >
+                Policy on Solscan
+              </a>
+            )}
             {" · "}
             <Link href="/" className="text-mint-400 hover:underline">
               Control room
