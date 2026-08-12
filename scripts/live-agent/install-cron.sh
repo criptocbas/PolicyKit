@@ -25,17 +25,31 @@ if [[ -z "$YARN_BIN" || "$YARN_BIN" == /tmp/yarn--* ]]; then
   YARN_BIN="yarn"
 fi
 
-CRON_LINE="0 */6 * * * cd ${ROOT} && ${YARN_BIN} agent:tick >> ${LOG} 2>&1"
+# Load paid RPC from gitignored proof/.rpc-url when present (Helius etc.)
+RPC_EXPORT=""
+if [[ -f "${ROOT}/proof/.rpc-url" ]]; then
+  RPC_EXPORT='export RPC_URL="$(head -n1 proof/.rpc-url | tr -d "\\r")"; '
+fi
+
+CRON_LINE="0 */6 * * * cd ${ROOT} && ${RPC_EXPORT}${YARN_BIN} agent:tick >> ${LOG} 2>&1"
 
 echo "Proposed crontab entry:"
 echo "  ${CRON_LINE}"
 echo
 echo "Log file: ${LOG}"
 echo
+if ! command -v crontab >/dev/null 2>&1; then
+  echo "crontab not found on this machine."
+  echo "Use systemd instead:"
+  echo "  bash scripts/live-agent/install-systemd.sh --install"
+  exit 1
+fi
+
 if [[ "${1:-}" == "--install" ]]; then
   (crontab -l 2>/dev/null | grep -v 'yarn agent:tick' || true; echo "$CRON_LINE") | crontab -
   echo "Installed. Verify with: crontab -l"
 else
   echo "Dry-run only. To install:"
   echo "  bash scripts/live-agent/install-cron.sh --install"
+  echo "If crontab is missing: bash scripts/live-agent/install-systemd.sh --install"
 fi

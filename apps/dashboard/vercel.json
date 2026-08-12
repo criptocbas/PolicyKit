@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && yarn install",
   "buildCommand": "cd ../.. && yarn build:packages && yarn workspace @policykit/dashboard build"

@@ -25,6 +25,8 @@
     "agent:setup": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/setup-live-policy.ts",
     "agent:tick": "yarn build:packages && ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/live-agent/run-tick.ts",
     "agent:cron": "bash scripts/live-agent/install-cron.sh",
+    "agent:systemd": "bash scripts/live-agent/install-systemd.sh",
+    "agent:health": "bash scripts/live-agent/feed-health.sh",
     "example:agent-kit": "yarn build:packages && yarn workspace @policykit/example-agent-kit-bounded-spend start"
   },
   "dependencies": {

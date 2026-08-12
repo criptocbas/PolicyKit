@@ -1,6 +1,6 @@
 {
-  "buildCommand": "yarn build:packages && yarn workspace @policykit/dashboard build",
-  "installCommand": "yarn install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "outputDirectory": "apps/dashboard/.next"
+  "installCommand": "yarn install",
+  "buildCommand": "yarn build:packages && yarn workspace @policykit/dashboard build"
 }

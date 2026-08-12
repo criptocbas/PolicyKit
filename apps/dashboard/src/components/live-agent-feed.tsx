@@ -118,6 +118,32 @@ export function LiveAgentFeed({
         </div>
       </CardHeader>
       <CardContent>
+        {!loading && feed && freshness.level === "stale" && (
+          <div
+            role="status"
+            className="mb-3 rounded-lg border border-coral-500/40 bg-coral-500/10 px-3 py-2 text-sm text-coral-200"
+          >
+            <p className="font-medium">Feed is stale ({freshness.label})</p>
+            <p className="mt-1 text-xs text-coral-200/80">
+              Judges need a live loop. From repo root:{" "}
+              <code className="text-coral-100">yarn agent:tick</code>
+              {" · "}
+              schedule:{" "}
+              <code className="text-coral-100">
+                bash scripts/live-agent/install-systemd.sh --install
+              </code>
+            </p>
+          </div>
+        )}
+        {!loading && feed && freshness.level === "recent" && (
+          <div
+            role="status"
+            className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90"
+          >
+            Feed is aging ({freshness.label}). Refresh with{" "}
+            <code className="text-amber-50">yarn agent:tick</code> before a demo.
+          </div>
+        )}
         {loading && (
           <p className="text-sm text-mist-500">Loading adversary feed…</p>
         )}

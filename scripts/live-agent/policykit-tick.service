@@ -1,0 +1,15 @@
+[Unit]
+Description=PolicyKit live adversary tick (devnet)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Documents/Programming/grok-build/solana/PolicyKit
+# Prefer paid RPC from gitignored proof/.rpc-url when present.
+Environment=PATH=%h/.local/share/mise/installs/node/25.2.1/bin:/usr/local/bin:/usr/bin
+ExecStart=/bin/bash -lc 'set -euo pipefail; ROOT="%h/Documents/Programming/grok-build/solana/PolicyKit"; cd "$ROOT"; if [[ -f proof/.rpc-url ]]; then export RPC_URL="$(head -n1 proof/.rpc-url | tr -d "\\r")"; fi; yarn agent:tick'
+Nice=10
+
+[Install]
+WantedBy=default.target

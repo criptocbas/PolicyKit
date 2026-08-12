@@ -83,8 +83,11 @@ export default function PublicPolicyPage() {
           Compromised-agent bounds
         </h1>
         <p className="text-sm text-mist-400">
-          Open on-chain policy for Solana agents. If the hot key is stolen,
-          damage is limited by these rules. No wallet required.
+          Open on-chain policy vault for Solana agents. If the hot key is
+          stolen, <span className="text-mist-200">vault</span> outflows via{" "}
+          <code className="text-mist-300">execute_spend</code> are limited by
+          these rules when caps and allowlists are configured. Fund the vault —
+          not the agent. No wallet required.
         </p>
         <PublicPolicyView
           address={address}

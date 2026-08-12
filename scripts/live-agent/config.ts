@@ -22,7 +22,27 @@ export const LIVE_FEED_PUBLIC_PATH = path.join(
 export const AGENT_KEY_PATH =
   process.env.AGENT_KEY ?? path.join(PROOF_DIR, ".agent-keypair.json");
 
-export const RPC_URL = process.env.RPC_URL ?? "https://api.devnet.solana.com";
+/** Gitignored local file for paid RPC (e.g. Helius with api-key). One URL per line. */
+export const RPC_URL_FILE = path.join(PROOF_DIR, ".rpc-url");
+
+function resolveRpcUrl(): string {
+  if (process.env.RPC_URL?.trim()) return process.env.RPC_URL.trim();
+  try {
+    if (fs.existsSync(RPC_URL_FILE)) {
+      const line = fs
+        .readFileSync(RPC_URL_FILE, "utf8")
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l && !l.startsWith("#"));
+      if (line) return line;
+    }
+  } catch {
+    /* fall through */
+  }
+  return "https://api.devnet.solana.com";
+}
+
+export const RPC_URL = resolveRpcUrl();
 export const PROGRAM_ID = process.env.PROGRAM_ID
   ? new PublicKey(process.env.PROGRAM_ID)
   : POLICYKIT_PROGRAM_ID;

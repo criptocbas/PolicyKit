@@ -171,7 +171,8 @@ export function PublicPolicyView({
             If agent key is stolen right now
           </CardTitle>
           <CardDescription className="text-mist-400">
-            Economic bound — not full sandbox. Authority can pause and clawback.
+            Vault outflows only — not a whole-agent sandbox. Zero caps or open
+            lists remove the bound. Authority can pause and clawback.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -40,11 +40,27 @@ Deploy PolicyKit to that cluster before creating policies. **Wallet network must
 
 ## Vercel
 
-1. Root directory: `apps/dashboard` **or** monorepo root with:
-   - Install: `yarn install`
-   - Build: `yarn build:packages && yarn workspace @policykit/dashboard build`
-2. Set the three `NEXT_PUBLIC_*` env vars.
-3. Framework preset: Next.js.
+**Recommended import settings** (Root Directory = `apps/dashboard`):
+
+| Setting | Value |
+|---------|--------|
+| Framework | Next.js |
+| Root Directory | `apps/dashboard` |
+| Install Command | `cd ../.. && yarn install` (from `apps/dashboard/vercel.json`) |
+| Build Command | `cd ../.. && yarn build:packages && yarn workspace @policykit/dashboard build` |
+| **Output Directory** | **leave empty** (default `.next`) — **never** `apps/dashboard/.next` |
+
+If Output Directory is set to `apps/dashboard/.next` while Root Directory is already `apps/dashboard`, Vercel looks for  
+`/apps/dashboard/apps/dashboard/.next` and the deploy fails even after a successful `next build`.
+
+Env (Production + Preview):
+
+```bash
+NEXT_PUBLIC_CLUSTER=devnet
+NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_POLICYKIT_PROGRAM_ID=AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27
+NEXT_PUBLIC_PROOF_URL=/proof/devnet-latest.json
+```
 
 ---
 

@@ -20,9 +20,10 @@ Creates:
 | Need | Why |
 |------|-----|
 | Authority key with **devnet SOL** | Pays setup + ATA rent (`AUTHORITY_KEY`, default `~/.config/solana/id.json`) |
-| Devnet RPC reachable | Default `https://api.devnet.solana.com` (rate limits → retries in tick) |
+| Devnet RPC reachable | Public `api.devnet.solana.com` is often slow/rate-limited — prefer a paid RPC |
 | `yarn build:packages` | `agent:setup` / `agent:tick` run this first |
 | Agent key on disk | After setup: `proof/.agent-keypair.json` (or `AGENT_KEY`) |
+| Optional paid RPC | `export RPC_URL='https://devnet.helius-rpc.com/?api-key=…'` **or** write the URL to **gitignored** `proof/.rpc-url` (one line) |
 
 If `proof/live-config.json` is missing → run setup.  
 If agent pubkey ≠ `live-config.agent` → tick warns; re-run setup or point `AGENT_KEY` at the correct file.  
@@ -50,7 +51,23 @@ Updates `proof/live-feed.json` and `apps/dashboard/public/proof/live-feed.json`.
 | Policy | `GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n` (see `proof/live-config.json`) |
 | Keys committed | **No** — `proof/.agent-keypair.json` gitignored (`**/.agent-keypair.json`) |
 
-## Schedule (local cron — preferred)
+## Schedule (always-on)
+
+### systemd user timer (preferred when `crontab` is missing)
+
+```bash
+# Writes units + enables timer (every 6h + soon after boot)
+bash scripts/live-agent/install-systemd.sh --install
+
+# Status / logs
+systemctl --user list-timers policykit-tick.timer
+journalctl --user -u policykit-tick.service -n 50
+
+# Keep timer running after logout (optional, once per machine)
+loginctl enable-linger "$USER"
+```
+
+### cron (if available)
 
 ```bash
 # Dry-run (prints the crontab line)
@@ -60,14 +77,13 @@ yarn agent:cron
 bash scripts/live-agent/install-cron.sh --install
 ```
 
-Or hand-edit crontab:
+### Health check
 
-```cron
-# Every 6 hours
-0 */6 * * * cd /path/to/PolicyKit && /usr/bin/yarn agent:tick >> /tmp/policykit-tick.log 2>&1
+```bash
+bash scripts/live-agent/feed-health.sh 24   # exit 1 if feed older than 24h
 ```
 
-Do **not** put mainnet keys in GitHub Actions. Prefer local cron with a throwaway **devnet-only** agent key.
+Do **not** put mainnet keys in GitHub Actions. Prefer local systemd/cron with a throwaway **devnet-only** agent key.
 
 ### Feed format
 
@@ -106,7 +122,9 @@ If we add a scheduled workflow later:
 
 | Var | Default |
 |-----|---------|
-| `RPC_URL` | `https://api.devnet.solana.com` |
+| `RPC_URL` | env, else first line of `proof/.rpc-url`, else `https://api.devnet.solana.com` |
 | `AUTHORITY_KEY` | `~/.config/solana/id.json` |
 | `AGENT_KEY` | `proof/.agent-keypair.json` |
 | `PROGRAM_ID` | SDK default |
+
+**Never commit** `proof/.rpc-url` or agent keypairs (both gitignored).

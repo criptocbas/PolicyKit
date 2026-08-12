@@ -23,8 +23,15 @@ apps/*/out
 !target/deploy/.gitkeep
 proof/.agent-keypair.json
 **/.agent-keypair.json
+# Paid RPC URLs (may embed API keys) — never commit
+proof/.rpc-url
+**/.rpc-url
 
 # OS
 Thumbs.db
 .superpowers/
 .worktrees/
+
+# Local research / pitch scratch (never commit)
+research/
+.research/

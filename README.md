@@ -4,20 +4,32 @@
 
 **Open on-chain policy vault for Solana Agent Kit agents.**
 
-If the agent key is compromised, damage is bounded by per-tx/daily/rate limits, program allowlists, and destination owner allowlists. Authority can **pause** (circuit breaker) and **clawback**. Fund the vault — not the hot key.
+If the agent key is compromised, **vault** outflows via `execute_spend` are bounded by on-chain per-tx, daily, and rate limits **when those caps are non-zero**, and by destination-owner / declared-program allowlists **when enabled**. Authority can **pause** and **clawback**. Fund the vault — not the hot key. Caps of `0` or open lists remove the economic bound.
 
-Built for Colosseum Eternal. Edge: **Agent Kit default path (A)** + **compromised-agent max damage (C)**. Beachhead: x402/API-style spenders.
+Built for Colosseum Eternal. Shipped focus: **Agent Kit vault path (A)** + **compromised-agent max damage (C)** when the vault is configured. Beachhead: x402/API-style spenders.
 
-## If the agent is stolen
+## Judge pack (60s)
+
+| Link | What |
+|------|------|
+| [`/p/<policy>`](./docs/JUDGE.md) | Public max-damage + live adversary ticks — **no wallet** |
+| [docs/JUDGE.md](./docs/JUDGE.md) | Canonical policy PDA, Solscan, feed health |
+| [docs/PITCH_SCRIPTS.md](./docs/PITCH_SCRIPTS.md) | ≤3 min pitch + tech walkthrough (tribunal-safe) |
+| [docs/COMPETITIVE.md](./docs/COMPETITIVE.md) | Honest win / lose / do-not-claim |
+
+Live devnet policy: `GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n`  
+→ local: `yarn dev:dashboard` then open `/p/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n`
+
+## If the agent is stolen (vault funded + rules set)
 
 | Bound | On-chain |
 |-------|----------|
-| Per-tx / daily / rate | Yes |
-| Destination owners | Yes (allowlist) |
-| Declared program intent | Yes (allow/deny) |
+| Per-tx / daily / rate | Yes (if caps ≠ 0) |
+| Destination owners | Yes (if allowlist enabled) |
+| Declared program intent | Yes (allow/deny signal — not full CPI mediation) |
 | Pause + clawback | Authority only |
 
-Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Public page: `/p/<policyPda>` · Competitive honesty: [docs/COMPETITIVE.md](./docs/COMPETITIVE.md)
+Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Competitive honesty: [docs/COMPETITIVE.md](./docs/COMPETITIVE.md)
 
 ## Status
 
@@ -29,8 +41,10 @@ Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Public page: `/p/<policyP
 
 | Doc | Purpose |
 |-----|---------|
+| [docs/JUDGE.md](./docs/JUDGE.md) | Eternal judge cold-open links |
+| [docs/PITCH_SCRIPTS.md](./docs/PITCH_SCRIPTS.md) | Pitch + tech video scripts |
 | [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) | Compromised-agent bounds |
-| [docs/COMPETITIVE.md](./docs/COMPETITIVE.md) | Where we win / lose |
+| [docs/COMPETITIVE.md](./docs/COMPETITIVE.md) | Where we win / lose / do not claim |
 | [docs/ECOSYSTEM.md](./docs/ECOSYSTEM.md) | Agent Kit contribution path |
 | [docs/DEVNET.md](./docs/DEVNET.md) | Devnet deploy + proof |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map |
@@ -87,6 +101,12 @@ Schedule ticks: [scripts/live-agent/README.md](./scripts/live-agent/README.md).
 Details: [docs/DEVNET.md](./docs/DEVNET.md).
 
 **Professional proof loop:** keep `yarn agent:tick` on a schedule so the public feed stays **live** (dashboard badges show stale after 48h). Judges open `/p/<policy>` — no wallet, max-damage + recent ticks.
+
+```bash
+bash scripts/live-agent/feed-health.sh 24          # fail if feed older than 24h
+bash scripts/live-agent/install-systemd.sh --install  # every 6h (no crontab required)
+# or: bash scripts/live-agent/install-cron.sh --install
+```
 
 ### Dependency pins (platform-tools rustc 1.84)
 
@@ -179,7 +199,7 @@ Wire with `createVercelAITools(agent, agent.actions)` / LangChain helpers from `
 1. **Fund the policy vault**, not the agent key. Agent only needs fee SOL.  
 2. All **vault** outflows go through `execute_spend` (plugin methods).  
 3. Always set `intentProgram` to the program the agent is about to use (Jupiter, etc.).  
-4. On-chain limits still apply even if intent is spoofed — see [docs/SECURITY.md](docs/SECURITY.md).  
+4. If intent is spoofed, **vault** outflows still hit non-zero caps, enabled allowlists, pause, and clawback — not full CPI mediation. See [docs/SECURITY.md](docs/SECURITY.md).  
 5. MVP: agent may only spend **`spend_mint`**; recover other vault mints with clawback.  
 6. The plugin does **not** sandbox other Agent Kit plugins — do not fund the agent wallet with spendable assets.  
 
