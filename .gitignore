@@ -35,3 +35,6 @@ Thumbs.db
 # Local research / pitch scratch (never commit)
 research/
 .research/
+
+# Private video production kit (scripts, teleprompter — never commit)
+video-kit/
