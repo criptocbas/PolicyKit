@@ -18,6 +18,7 @@ Built for Colosseum Eternal. Shipped focus: **Agent Kit vault path (A)** + **com
 | [docs/COMPETITIVE.md](./docs/COMPETITIVE.md) | Honest win / lose / do-not-claim |
 
 Live devnet policy: `GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n`  
+→ **production:** [policy-kit-dashboard.vercel.app/p/…](https://policy-kit-dashboard.vercel.app/p/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n)  
 → local: `yarn dev:dashboard` then open `/p/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n`
 
 ## If the agent is stolen (vault funded + rules set)

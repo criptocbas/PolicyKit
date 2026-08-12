@@ -4,9 +4,14 @@
 
 ## Live policy (devnet)
 
+**Production host (share this):** [https://policy-kit-dashboard.vercel.app](https://policy-kit-dashboard.vercel.app)
+
+Prefer the stable production domain — not a per-deployment URL (`…-jnv404zwj-…`). Those can be SSO-protected or go stale after the next deploy.
+
 | What | Link |
 |------|------|
-| **Public max-damage page** | https://&lt;your-dashboard-host&gt;/p/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n |
+| **Public max-damage page** | https://policy-kit-dashboard.vercel.app/p/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n |
+| **Control room** | https://policy-kit-dashboard.vercel.app/ |
 | **Policy on Solscan** | https://solscan.io/account/GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n?cluster=devnet |
 | **Program on Solscan** | https://solscan.io/account/AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27?cluster=devnet |
 | **Repo** | https://github.com/criptocbas/PolicyKit |
