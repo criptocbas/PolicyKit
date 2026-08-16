@@ -66,7 +66,7 @@ docs/                        # Design, security, threat model, architecture
 ## Quick start
 
 ```bash
-# Prerequisites: Solana CLI, Anchor 0.32.x (avm use 0.32.1), Node 20+, yarn
+# Prerequisites: Solana CLI, Anchor 0.32.x (avm use 0.32.1), Node 22+, yarn
 yarn install
 anchor build
 anchor test
@@ -259,7 +259,7 @@ Vault  = ATA(Policy, mint)   // created client-side (SDK deposit does this)
 Program ID (local/devnet; matches deploy keypair): `AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27`  
 (See `Anchor.toml` / `@policykit/sdk` `POLICYKIT_PROGRAM_ID`. Deploy keypair is gitignored under `target/deploy/`.)
 
-## Dashboard (Phase 3)
+## Dashboard
 
 Demo-first control room for judges and weekly videos.
 
@@ -273,14 +273,22 @@ yarn build:dashboard
 |----|---------|
 | Status card | Remaining daily budget, actions left, Active/Paused/Expired |
 | Create policy | Three SDK templates + editable limits |
+| Policy switcher | Manage multiple authority policies in one session |
+| Update policy | Change limits, allowlists, rate window, and expiry |
+| Rotate agent | Replace a compromised or retired agent key |
 | Fund vault | Deposit into policy ATA |
 | Authority | Pause / Unpause / Clawback |
-| Agent demo | Success (Jupiter) → fail (**Program not allowed** / **Over daily budget**) |
-| Activity | Recent actions + Solscan links |
+| Agent demo | Success (Jupiter) → fail (**Program not allowed** / **Destination not allowed**) |
+| Activity | Session and on-chain actions + Solscan links |
+| Public proof | Wallet-free `/p/<policy>` max-damage and policy view |
+| Adversary feed | Freshness-labelled accepted and rejected demo attempts |
 
 Configure `apps/dashboard/.env.local` (see `apps/dashboard/.env.example`). Deploy PolicyKit to the same cluster as `NEXT_PUBLIC_RPC_URL`.
 
 Details: [apps/dashboard/README.md](apps/dashboard/README.md).
+
+For deployment boundaries and required operational controls, see
+[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
 
 ## SDK surface (`@policykit/sdk`)
 

@@ -1,5 +1,9 @@
 # Phase D — A+C Edge: Agent Kit Default Path + Compromised-Agent Max Damage
 
+> Historical execution snapshot. “Missing” items and suggested sequencing below
+> reflect the pre-implementation baseline, not current product status. See the
+> root README and CHANGELOG for shipped Phase D behavior.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 
 **Goal:** Make PolicyKit the **default open on-chain policy vault for Solana Agent Kit agents**, proven by a **public “compromised agent is still bounded”** live system — not by feature sprawl or presentation-only polish.

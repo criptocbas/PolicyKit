@@ -42,12 +42,14 @@ docs/                        # Design, security, threat model
 1. Signer is `policy.agent` (`has_one`)  
 2. Load vault (mint + authority = policy PDA)  
 3. Load destination (same mint; owner ≠ policy PDA)  
-4. `check_and_record_spend`: amount > 0 → active → refresh windows → spend_mint → program lists → mint list → rate → per-tx/daily + record  
-5. Vault balance ≥ amount  
-6. PDA-signed classic SPL `Transfer`  
-7. Emit `SpendExecuted`  
+4. Reject destinations owned by the Policy PDA
+5. `check_and_record_spend`: amount > 0 → active → refresh windows → spend_mint → program lists → mint list → destination owner list → rate → per-tx/daily + record
+6. Vault balance ≥ amount
+7. PDA-signed classic SPL `Transfer`
+8. Emit `SpendExecuted`
 
-Failed checks abort the transaction; counters are not committed.
+Failed checks abort the transaction; later balance or CPI failures also roll
+back recorded counters.
 
 ## Data ownership
 
@@ -57,6 +59,7 @@ Failed checks abort the transaction; counters are not committed.
 | Vault balances | On-chain token accounts | PDA authority |
 | Activity feed (dashboard) | Browser session / localStorage | Demo only |
 | Demo agent secret | localStorage | **Not** production |
+| Live adversary feed | Versioned public JSON | Demonstration metadata; verify submitted transactions against RPC |
 
 ## PDA seeds
 

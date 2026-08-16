@@ -25,21 +25,26 @@
 
 Order of checks:
 
-1. Amount > 0  
-2. Not paused  
-3. Not expired (`expires_at == 0 || now < expires_at`)  
-4. Refresh day window (86400s) and rate window  
-5. **`mint == spend_mint`** (`SpendMintRequired`)  
-6. Program allowlist (if enabled)  
-7. Program denylist (if enabled)  
-8. Mint allowlist (if enabled)  
-9. Destination owner allowlist (if enabled) — wallet owning the destination ATA  
-10. Rate limit (`actions_in_window < max`)  
-11. Per-tx limit, daily limit; update spend counters  
-12. Increment action counter  
-13. Destination owner ≠ policy PDA (`InvalidDestination`)  
-14. Balance check  
-15. PDA-signed classic SPL `Transfer`  
+1. Anchor account constraints verify the agent, Policy PDA, mint owner, and token program.
+2. Handler deserializes the vault and verifies its mint and Policy PDA authority.
+3. Handler deserializes the destination and verifies the mint.
+4. Destination owner ≠ Policy PDA (`InvalidDestination`).
+5. Amount > 0.
+6. Not paused.
+7. Not expired (`expires_at == 0 || now < expires_at`).
+8. Refresh day window (86400s) and rate window.
+9. **`mint == spend_mint`** (`SpendMintRequired`).
+10. Program allowlist and denylist, when enabled.
+11. Mint allowlist, when enabled.
+12. Destination owner allowlist, when enabled.
+13. Rate limit (`actions_in_window < max`).
+14. Per-transaction and daily limits; record spend and action counters.
+15. Vault balance check.
+16. PDA-signed classic SPL `Transfer`.
+
+All state changes and the transfer are atomic. A later balance or CPI failure rolls
+back the counter mutations. Client-side preflight is advisory: it can reject an
+attempt before submission, but only a submitted transaction is on-chain evidence.
 
 ## Intent program (honest limitations)
 

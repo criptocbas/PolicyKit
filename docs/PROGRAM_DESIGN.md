@@ -83,19 +83,24 @@ Full CPI mediation into arbitrary DeFi programs is a deliberate post-MVP hardeni
 
 ### `execute_spend` check order
 
-1. Signer is `policy.agent`
-2. Not paused; not expired
-3. Refresh day + rate windows from `Clock`
-4. **`mint == spend_mint`** (`SpendMintRequired`)
-5. Program allowlist / denylist vs `intent_program`
-6. Mint allowlist vs transferred mint
-7. Destination owner allowlist (if enabled) vs destination token account **owner**
-8. Rate limit (`actions_in_window < max`)
-9. Per-tx + daily spend limits; update counters
-10. Destination token owner ≠ policy PDA
-11. Balance check
-12. PDA-signed classic SPL **`Transfer`** CPI (not Token-2022 `transfer_checked`)
-13. Emit `SpendExecuted`
+1. Anchor constraints verify `policy.agent`, Policy PDA seeds, mint ownership, and the classic token program.
+2. Deserialize the vault; verify its mint and Policy PDA authority.
+3. Deserialize the destination; verify its mint and that its owner is not the Policy PDA.
+4. Require a non-zero amount.
+5. Require the policy to be unpaused and unexpired.
+6. Refresh day + rate windows from `Clock`.
+7. Require **`mint == spend_mint`** (`SpendMintRequired`).
+8. Check program allowlist / denylist against declared `intent_program`.
+9. Check the mint allowlist.
+10. Check the destination owner allowlist.
+11. Enforce the rate limit.
+12. Enforce per-transaction + daily limits; update counters.
+13. Check the vault balance.
+14. Perform the PDA-signed classic SPL **`Transfer`** CPI (not Token-2022 `transfer_checked`).
+15. Emit `SpendExecuted`.
+
+The transaction is atomic: any error after counter mutation, including an
+insufficient balance or failed CPI, rolls all state changes back.
 
 **Breaking (Phase B):** Adding destination allowlist fields increases Policy account size. Existing policies created before this upgrade cannot be deserialized — recreate them after redeploy.
 

@@ -39,6 +39,12 @@ Outputs:
 
 Do **not** commit authority keypairs. Proof JSON is public (addresses + signatures only).
 
+An attempt rejected by SDK/plugin preflight has no transaction signature and is
+not on-chain evidence. A submitted transaction that fails on-chain can have a
+signature and explorer record, but it emits no success event and commits no
+counter changes. Proof surfaces must label these two rejection classes
+separately.
+
 ## Dashboard against devnet
 
 ```bash

@@ -14,10 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard freshness badges (live / recent / stale) on adversary feed and snapshot proof.
 - Public policy page embeds filtered adversary ticks.
 - `yarn agent:cron` helper and improved Agent Kit bounded-spend example (status, max damage, dest reject).
+- Production-readiness checklist covering custody, monitoring, recovery, and release evidence.
 
 ### Changed
 
 - Live proof card labeled as snapshot proof; continuous proof is the adversary feed.
+- Corrected Node 22 prerequisites and aligned documented spend-check ordering
+  with the on-chain handler.
+- Marked completed implementation plans as historical snapshots and refreshed
+  the dashboard feature inventory.
 
 ## [0.4.0] - 2026-07-31
 
