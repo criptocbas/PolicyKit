@@ -51,6 +51,8 @@ Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Competitive honesty: [doc
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map |
 | [docs/SECURITY.md](./docs/SECURITY.md) | Invariants |
 | [docs/SECURITY_OPERATIONS.md](./docs/SECURITY_OPERATIONS.md) | Monitoring, key rotation, incident response |
+| [docs/VERSION_COMPATIBILITY.md](./docs/VERSION_COMPATIBILITY.md) | Supported tool and API lines |
+| [docs/RELEASING.md](./docs/RELEASING.md) | Package artifact and release gates |
 | [examples/agent-kit-bounded-spend](./examples/agent-kit-bounded-spend) | Gold-standard Agent Kit example |
 | [examples/x402-policykit](./examples/x402-policykit) | x402 v2 custom-scheme devnet settlement |
 

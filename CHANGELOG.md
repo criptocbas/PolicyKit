@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strict x402 v2 `PAYMENT-REQUIRED` validation and a reproducible
   `policykit-exact` devnet example with quote expiry, replay protection, exact
   token-delta verification, and honest custom-scheme boundaries.
+- Package release metadata, stable-export regression coverage, version
+  compatibility policy, artifact review checklist, and a fast local verification
+  command.
 
 ### Changed
 
