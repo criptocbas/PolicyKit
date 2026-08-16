@@ -39,6 +39,18 @@ Outputs:
 
 Do **not** commit authority keypairs. Proof JSON is public (addresses + signatures only).
 
+An attempt rejected by SDK/plugin preflight has no transaction signature and is
+not on-chain evidence. A submitted transaction that fails on-chain can have a
+signature and explorer record, but it emits no success event and commits no
+counter changes. Proof surfaces must label these two rejection classes
+separately.
+
+The live agent runner bypasses RPC preflight only for its two expected devnet
+rejections, confirms that each transaction failed with the expected PolicyKit
+error, and publishes the signature as `onchain_rejection` evidence. This is a
+demonstration mechanism, not a recommendation to disable preflight in normal
+agent integrations.
+
 ## Dashboard against devnet
 
 ```bash

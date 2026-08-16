@@ -1,5 +1,9 @@
 # Phase A — Quality Foundation Implementation Plan
 
+> Historical execution snapshot. The baseline and unchecked task lists below
+> describe the repository on 2026-07-31 and are not current product status.
+> See the root README and CHANGELOG for shipped behavior.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make PolicyKit feel like professional open-source infrastructure: deterministic CI, denser tests (including pure unit tests for enforcement math), a written threat model, and docs that match the code — without adding product features.

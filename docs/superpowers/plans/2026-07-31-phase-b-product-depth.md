@@ -1,5 +1,9 @@
 # Phase B — Product Depth Implementation Plan
 
+> Historical execution snapshot. The baseline and gap maps below describe the
+> repository before Phase B shipped and are not current product status. See the
+> root README and CHANGELOG for the implemented dashboard and program features.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn PolicyKit from “MVP that demos” into a **control room + stronger vault rules** judges and builders can run daily: complete authority UX, multi-policy session management, chain-backed activity, and an on-chain **destination allowlist** that hardens the declared-intent model.

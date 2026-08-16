@@ -21,6 +21,23 @@ await sdk.executeSpend({
 });
 ```
 
+Assess a decoded policy before presenting it as production-bounded:
+
+```ts
+import { assessPolicySafety } from "@policykit/sdk";
+
+const account = await sdk.getPolicy(policy);
+const assessment = assessPolicySafety(account);
+
+console.log(assessment.level); // bounded | partially-bounded | unbounded
+for (const finding of assessment.findings) {
+  console.log(finding.code, finding.severity, finding.detail);
+}
+```
+
+The assessment is advisory and deterministic. On-chain PolicyKit remains the
+enforcement source of truth, and program intent remains agent-declared metadata.
+
 **Peers:** `@coral-xyz/anchor` ^0.32, `@solana/web3.js` ^1.95.
 
 **Docs:** root [README](../../README.md) · [error catalog](../../docs/ERROR_CATALOG.md) · [architecture](../../docs/ARCHITECTURE.md)

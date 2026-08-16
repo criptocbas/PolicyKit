@@ -14,10 +14,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard freshness badges (live / recent / stale) on adversary feed and snapshot proof.
 - Public policy page embeds filtered adversary ticks.
 - `yarn agent:cron` helper and improved Agent Kit bounded-spend example (status, max damage, dest reject).
+- Production-readiness checklist covering custody, monitoring, recovery, and release evidence.
+- SDK `assessPolicySafety` API with machine-readable configuration findings and
+  current-window maximum-damage context.
+- Dashboard safety classification for loaded, proposed, and updated policies,
+  including explicit confirmation before unbounded or weakened configurations.
+- Versioned policy-template metadata and bounded-default regression tests.
+- Rust enforcement-invariant tests for exact boundaries, window rollover,
+  rejected-spend counter behavior, overflow, and timestamp saturation.
+- SDK/IDL error parity test and closer preflight parity for Policy PDA
+  destinations and counter overflow.
+- Version 2 proof-feed contract with explicit on-chain/preflight/local evidence,
+  schema validation, atomic writes, slots, block times, and signatures for
+  intentionally rejected devnet transactions.
+- Public proof safety classification, linked authority/agent/mint identities,
+  rate-window context, and transparent max-damage assumptions.
+- Proof-loop health checks for schema integrity, future timestamps, unexpected
+  latest-tick results, evidence signatures, and dashboard-copy drift.
+- Security operations runbook covering key separation, monitoring severity,
+  agent rotation, compromise response, and recovery drills.
+- Strict x402 v2 `PAYMENT-REQUIRED` validation and a reproducible
+  `policykit-exact` devnet example with quote expiry, replay protection, exact
+  token-delta verification, and honest custom-scheme boundaries.
+- Package release metadata, stable-export regression coverage, version
+  compatibility policy, artifact review checklist, and a fast local verification
+  command.
+- CPI-mediation research RFC covering protocol adapters, signed quotes,
+  account-substitution risks, migration questions, and implementation gates.
 
 ### Changed
 
 - Live proof card labeled as snapshot proof; continuous proof is the adversary feed.
+- Corrected Node 22 prerequisites and aligned documented spend-check ordering
+  with the on-chain handler.
+- Marked completed implementation plans as historical snapshots and refreshed
+  the dashboard feature inventory.
+- Maximum rate-window damage now accounts for actions already consumed and the
+  remaining daily budget.
+- Insufficient-vault integration coverage now verifies atomic rollback of all
+  spend and action counters.
+- Dashboard demo-agent secrets are tab-scoped in `sessionStorage` and the UI
+  explicitly warns that browser signing is not production custody.
 
 ## [0.4.0] - 2026-07-31
 

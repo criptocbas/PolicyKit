@@ -116,6 +116,7 @@ export function createPolicyKitMethods(
       mint,
       intentProgram: intent,
       destinationOwner,
+      policyAddress: cfg.policy,
       vaultBalance,
     });
     const remainingDaily = (
@@ -173,6 +174,7 @@ export function createPolicyKitMethods(
           mint,
           intentProgram: intent,
           destinationOwner,
+          policyAddress: cfg.policy,
           vaultBalance,
         });
         if (!preview.ok) {

@@ -253,6 +253,36 @@ describe("previewSpend", () => {
     );
     expect(r).to.deep.equal({ ok: true });
   });
+
+  it("rejects a destination owned by the policy PDA when address is provided", () => {
+    const policyAddress = AUTHORITY;
+    const r = previewSpend(makePolicy(), {
+      amount: 1_000_000,
+      mint: SPEND_MINT,
+      intentProgram: JUPITER,
+      destinationOwner: policyAddress,
+      policyAddress,
+      nowSec: now,
+    });
+    expect(r.ok).to.equal(false);
+    if (!r.ok) expect(r.errorName).to.equal("InvalidDestination");
+  });
+
+  it("rejects lifetime counter overflow", () => {
+    const r = previewSpend(
+      makePolicy({
+        totalSpent: new BN("18446744073709551615"),
+      }),
+      {
+        amount: 1,
+        mint: SPEND_MINT,
+        intentProgram: JUPITER,
+        nowSec: now,
+      }
+    );
+    expect(r.ok).to.equal(false);
+    if (!r.ok) expect(r.errorName).to.equal("Overflow");
+  });
 });
 
 describe("computeMaxDamage", () => {
@@ -268,7 +298,8 @@ describe("computeMaxDamage", () => {
     const m = computeMaxDamage(p, 1_700_000_000);
     expect(m.maxPerAction!.toNumber()).to.equal(5_000_000);
     expect(m.remainingDaily!.toNumber()).to.equal(40_000_000);
-    expect(m.maxPerRateWindow!.toNumber()).to.equal(50_000_000);
+    // Seven actions remain in the current window: 7 × 5m = 35m.
+    expect(m.maxPerRateWindow!.toNumber()).to.equal(35_000_000);
     expect(m.destinationOwners).to.have.length(1);
     expect(m.summary).to.include("allowed owner");
   });

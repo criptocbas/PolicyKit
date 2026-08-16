@@ -3,6 +3,25 @@
   "version": "0.1.0",
   "description": "Solana Agent Kit plugin — forces value movement through PolicyKit execute_spend",
   "license": "MIT",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/criptocbas/PolicyKit.git",
+    "directory": "packages/agent-kit-plugin"
+  },
+  "keywords": [
+    "solana",
+    "agent-kit",
+    "ai-agent",
+    "policy",
+    "vault"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -12,12 +31,12 @@
     }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "yarn clean && yarn build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

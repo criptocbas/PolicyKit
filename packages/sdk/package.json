@@ -3,6 +3,25 @@
   "version": "0.1.0",
   "description": "Typed TypeScript client for the PolicyKit on-chain policy engine",
   "license": "MIT",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/criptocbas/PolicyKit.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": [
+    "solana",
+    "anchor",
+    "ai-agent",
+    "policy",
+    "vault"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,13 +34,13 @@
   },
   "files": [
     "dist",
-    "idl",
-    "src"
+    "idl"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist",
-    "test": "ts-mocha -p tsconfig.test.json -t 10000 'test/**/*.test.ts'"
+    "test": "ts-mocha -p tsconfig.test.json -t 10000 'test/**/*.test.ts'",
+    "prepack": "yarn clean && yarn build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

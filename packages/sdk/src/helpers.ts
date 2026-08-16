@@ -126,6 +126,8 @@ export function previewSpend(
     intentProgram: PublicKey;
     /** Destination token account owner (wallet). Checked against dest allowlist. */
     destinationOwner?: PublicKey;
+    /** Policy PDA; enables the on-chain self-destination check in preflight. */
+    policyAddress?: PublicKey;
     vaultBalance?: BN | number | bigint;
     nowSec?: number;
   }
@@ -133,7 +135,19 @@ export function previewSpend(
   const now = args.nowSec ?? Math.floor(Date.now() / 1000);
   const p = refreshPolicyWindows(policy, now);
   const amount = toBn(args.amount);
+  const u64Max = new BN("18446744073709551615");
+  const u32Max = 0xffffffff;
 
+  if (
+    args.policyAddress &&
+    args.destinationOwner?.equals(args.policyAddress)
+  ) {
+    return {
+      ok: false,
+      reason: "Destination token account owner must not be the policy PDA",
+      errorName: "InvalidDestination",
+    };
+  }
   if (amount.lte(new BN(0))) {
     return { ok: false, reason: "Amount must be > 0", errorName: "ZeroAmount" };
   }
@@ -215,13 +229,28 @@ export function previewSpend(
         errorName: "ExceedsPerTransactionLimit",
       };
     }
-    if (!p.maxPerDay.isZero() && p.spentToday.add(amount).gt(p.maxPerDay)) {
+    const newSpentToday = p.spentToday.add(amount);
+    if (!p.maxPerDay.isZero() && newSpentToday.gt(u64Max)) {
+      return {
+        ok: false,
+        reason: "Arithmetic overflow while updating daily spend",
+        errorName: "Overflow",
+      };
+    }
+    if (!p.maxPerDay.isZero() && newSpentToday.gt(p.maxPerDay)) {
       return {
         ok: false,
         reason: "Would exceed daily limit",
         errorName: "ExceedsDailyLimit",
       };
     }
+  }
+  if (p.totalSpent.add(amount).gt(u64Max) || p.actionsInWindow >= u32Max) {
+    return {
+      ok: false,
+      reason: "Arithmetic overflow while updating policy counters",
+      errorName: "Overflow",
+    };
   }
   if (args.vaultBalance !== undefined) {
     const bal = toBn(args.vaultBalance);

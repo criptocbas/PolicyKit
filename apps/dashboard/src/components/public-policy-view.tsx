@@ -1,8 +1,18 @@
 "use client";
 
-import { PolicyStatus, MaxDamageReport } from "@policykit/sdk";
+import {
+  PolicyStatus,
+  MaxDamageReport,
+  assessPolicySafety,
+} from "@policykit/sdk";
 import BN from "bn.js";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { shortKey, toUiAmount } from "@/lib/format";
 import { solscanAddress } from "@/lib/solscan";
@@ -11,6 +21,7 @@ import { CLUSTER } from "@/lib/config";
 import { walletClusterHint } from "@/lib/cluster-copy";
 import { ExternalLink, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { PolicySafetySummary } from "@/components/policy-safety-summary";
 
 export function PublicPolicyView({
   address,
@@ -31,7 +42,9 @@ export function PublicPolicyView({
     return (
       <Card className="border-coral-500/30">
         <CardHeader>
-          <CardTitle className="text-coral-300">Could not load policy</CardTitle>
+          <CardTitle className="text-coral-300">
+            Could not load policy
+          </CardTitle>
           <CardDescription className="text-mist-400">
             App is fixed to <span className="font-mono">{CLUSTER}</span>.{" "}
             {walletClusterHint()}
@@ -65,10 +78,13 @@ export function PublicPolicyView({
   const state = status.isPaused
     ? "Paused"
     : status.isExpired
-      ? "Expired"
-      : status.isActive
-        ? "Active"
-        : "Inactive";
+    ? "Expired"
+    : status.isActive
+    ? "Active"
+    : "Inactive";
+  const safety = assessPolicySafety(status.policy, {
+    vaultBalance: vaultBalance ?? undefined,
+  });
 
   return (
     <div className="space-y-4">
@@ -76,9 +92,12 @@ export function PublicPolicyView({
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <CardTitle className="font-display text-xl">Public policy</CardTitle>
+              <CardTitle className="font-display text-xl">
+                Public policy
+              </CardTitle>
               <CardDescription>
-                Read-only view — no wallet required. Share this page with judges.
+                Read-only view — no wallet required. Share this page with
+                judges.
               </CardDescription>
             </div>
             <Badge
@@ -86,8 +105,8 @@ export function PublicPolicyView({
                 state === "Active"
                   ? "success"
                   : state === "Paused"
-                    ? "warn"
-                    : "danger"
+                  ? "warn"
+                  : "danger"
               }
             >
               {state}
@@ -111,7 +130,42 @@ export function PublicPolicyView({
           />
           <Row
             label="Agent"
-            value={<span className="font-mono">{shortKey(status.agent, 6)}</span>}
+            value={
+              <a
+                href={solscanAddress(status.agent.toBase58())}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-mint-400"
+              >
+                {shortKey(status.agent, 6)}
+              </a>
+            }
+          />
+          <Row
+            label="Authority"
+            value={
+              <a
+                href={solscanAddress(status.authority.toBase58())}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-mint-400"
+              >
+                {shortKey(status.authority, 6)}
+              </a>
+            }
+          />
+          <Row
+            label="Spend mint"
+            value={
+              <a
+                href={solscanAddress(status.spendMint.toBase58())}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-mint-400"
+              >
+                {shortKey(status.spendMint, 6)}
+              </a>
+            }
           />
           <Row
             label="Daily left"
@@ -161,8 +215,22 @@ export function PublicPolicyView({
               </span>
             }
           />
+          <Row
+            label="Rate window"
+            value={
+              <span className="font-mono text-xs">
+                {status.policy.maxActionsPerWindow === 0
+                  ? "unlimited"
+                  : `${status.remainingActions ?? 0} actions left / ${
+                      status.policy.windowSeconds
+                    }s`}
+              </span>
+            }
+          />
         </CardContent>
       </Card>
+
+      <PolicySafetySummary assessment={safety} />
 
       <Card className="border-coral-500/30 bg-coral-500/5">
         <CardHeader>
@@ -185,19 +253,25 @@ export function PublicPolicyView({
             ))}
           </ul>
           <p className="mt-4 text-xs text-mist-500">{maxDamage.summary}</p>
+          <div className="mt-4 rounded-lg border border-ink-600/60 bg-ink-950/40 p-3 text-xs text-mist-400">
+            <p className="font-medium text-mist-200">
+              How this bound is derived
+            </p>
+            <p className="mt-1">
+              Values are computed from the Policy PDA fetched from RPC. The
+              current-window amount uses remaining actions, the per-transaction
+              cap, and remaining daily budget. Vault balance is shown
+              separately. A zero cap is unlimited, and declared program intent
+              is not CPI proof.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function Row({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-mist-400">{label}</span>

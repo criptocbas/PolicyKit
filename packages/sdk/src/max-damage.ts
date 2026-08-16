@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import { PolicyAccount } from "./types";
-import { remainingDaily } from "./helpers";
+import { remainingActions, remainingDaily } from "./helpers";
 
 /**
  * Human-readable worst-case loss if the agent key is stolen *right now*.
@@ -9,7 +9,7 @@ import { remainingDaily } from "./helpers";
 export type MaxDamageReport = {
   /** Max single spend (base units); null = unlimited */
   maxPerAction: BN | null;
-  /** Max if agent drains rate window (base units); null if unlimited or no rate limit */
+  /** Max additional spend in the current rate window; null if not bounded */
   maxPerRateWindow: BN | null;
   /** Remaining daily budget (base units); null = unlimited */
   remainingDaily: BN | null;
@@ -34,13 +34,16 @@ export function computeMaxDamage(
   const maxPerDay = policy.maxPerDay.isZero() ? null : policy.maxPerDay;
 
   let maxPerRateWindow: BN | null = null;
-  if (
-    policy.maxActionsPerWindow > 0 &&
-    !policy.maxPerTransaction.isZero()
-  ) {
-    maxPerRateWindow = policy.maxPerTransaction.mul(
-      new BN(policy.maxActionsPerWindow)
-    );
+  const actionsLeft = remainingActions(policy, nowSec);
+  if (actionsLeft !== null) {
+    if (!policy.maxPerTransaction.isZero()) {
+      maxPerRateWindow = policy.maxPerTransaction.mul(new BN(actionsLeft));
+    }
+    if (remDaily !== null) {
+      maxPerRateWindow = maxPerRateWindow
+        ? BN.min(maxPerRateWindow, remDaily)
+        : remDaily;
+    }
   }
 
   const destinationOwners = policy.destinationAllowlistEnabled

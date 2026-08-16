@@ -1,6 +1,6 @@
 "use client";
 
-import { PolicyStatus, computeMaxDamage } from "@policykit/sdk";
+import { PolicyStatus, assessPolicySafety } from "@policykit/sdk";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { shortKey, toUiAmount } from "@/lib/format";
@@ -8,6 +8,7 @@ import { solscanAddress } from "@/lib/solscan";
 import { ExternalLink, Shield, Zap } from "lucide-react";
 import BN from "bn.js";
 import Link from "next/link";
+import { PolicySafetySummary } from "@/components/policy-safety-summary";
 
 export function StatusCard({
   status,
@@ -60,6 +61,9 @@ export function StatusCard({
     status.remainingActions === null
       ? "∞"
       : String(status.remainingActions);
+  const safety = assessPolicySafety(status.policy, {
+    vaultBalance: vaultBalance ?? undefined,
+  });
 
   return (
     <Card className="relative overflow-hidden border-mint-500/25 shadow-glow">
@@ -213,10 +217,12 @@ export function StatusCard({
           </p>
         )}
 
+        <PolicySafetySummary assessment={safety} compact />
+
         <div className="rounded-lg border border-coral-500/20 bg-coral-500/5 p-3 text-xs text-mist-300">
           <p className="mb-1 font-medium text-coral-300">If agent key stolen</p>
           <p className="text-mist-400">
-            {computeMaxDamage(status.policy).summary}
+            {safety.maxDamage.summary}
           </p>
           <Link
             href={`/p/${status.address.toBase58()}`}

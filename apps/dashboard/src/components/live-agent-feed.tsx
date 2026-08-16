@@ -7,19 +7,36 @@ import {
   parseLiveFeed,
   type LiveFeedPayload,
 } from "@policykit/sdk";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Bot } from "lucide-react";
 import Link from "next/link";
 
 type TickEvent = LiveFeedPayload["events"][number];
 
-function badgeVariant(
-  e: TickEvent
-): "success" | "warn" | "danger" | "muted" {
+function badgeVariant(e: TickEvent): "success" | "warn" | "danger" | "muted" {
   if (e.kind.startsWith("reject") || e.kind === "skip_budget") return "warn";
   if (e.ok) return "success";
   return "danger";
+}
+
+function evidenceLabel(event: TickEvent): string {
+  switch (event.evidence) {
+    case "onchain_success":
+      return "on-chain success";
+    case "onchain_rejection":
+      return "on-chain rejection";
+    case "preflight_rejection":
+      return "preflight only";
+    default:
+      return "local observation";
+  }
 }
 
 export function LiveAgentFeed({
@@ -94,6 +111,8 @@ export function LiveAgentFeed({
             </CardTitle>
             <CardDescription>
               Public agent: allowed spend + rogue program + rogue destination.
+              Evidence labels distinguish submitted transactions from local
+              preflight.
               {freshness.level !== "unknown" && (
                 <span className="mt-1 block text-xs text-mist-500">
                   {freshness.detail}
@@ -107,8 +126,8 @@ export function LiveAgentFeed({
                 {freshness.level === "live"
                   ? `Live · ${freshness.label}`
                   : freshness.level === "stale"
-                    ? `Stale · ${freshness.label}`
-                    : freshness.label}
+                  ? `Stale · ${freshness.label}`
+                  : freshness.label}
               </Badge>
             )}
             {events.length > 0 && (
@@ -118,6 +137,19 @@ export function LiveAgentFeed({
         </div>
       </CardHeader>
       <CardContent>
+        {!loading && feed && !feed.valid && (
+          <div
+            role="alert"
+            className="mb-3 rounded-lg border border-coral-500/40 bg-coral-500/10 px-3 py-2 text-sm text-coral-200"
+          >
+            <p className="font-medium">Feed validation failed</p>
+            <ul className="mt-1 list-disc pl-4 text-xs text-coral-200/80">
+              {feed.issues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {!loading && feed && freshness.level === "stale" && (
           <div
             role="status"
@@ -141,7 +173,8 @@ export function LiveAgentFeed({
             className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90"
           >
             Feed is aging ({freshness.label}). Refresh with{" "}
-            <code className="text-amber-50">yarn agent:tick</code> before a demo.
+            <code className="text-amber-50">yarn agent:tick</code> before a
+            demo.
           </div>
         )}
         {loading && (
@@ -179,7 +212,12 @@ export function LiveAgentFeed({
                     {e.ts ? new Date(e.ts).toLocaleString() : "—"}
                   </p>
                 </div>
-                <Badge variant={badgeVariant(e)}>{e.kind}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant={badgeVariant(e)}>{e.kind}</Badge>
+                  <span className="text-[10px] text-mist-500">
+                    {evidenceLabel(e)}
+                  </span>
+                </div>
               </div>
               {e.explorer?.tx && (
                 <a
