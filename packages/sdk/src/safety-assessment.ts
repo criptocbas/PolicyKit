@@ -178,7 +178,7 @@ export function assessPolicySafety(
         "The authority must pause or update this policy to end agent access."
       )
     );
-  } else if (policy.expiresAt.lten(nowSec)) {
+  } else if (policy.expiresAt.lte(new BN(nowSec))) {
     findings.push(
       finding(
         "POLICY_EXPIRED",
