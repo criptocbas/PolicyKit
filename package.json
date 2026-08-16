@@ -27,7 +27,9 @@
     "agent:cron": "bash scripts/live-agent/install-cron.sh",
     "agent:systemd": "bash scripts/live-agent/install-systemd.sh",
     "agent:health": "bash scripts/live-agent/feed-health.sh",
-    "example:agent-kit": "yarn build:packages && yarn workspace @policykit/example-agent-kit-bounded-spend start"
+    "example:agent-kit": "yarn build:packages && yarn workspace @policykit/example-agent-kit-bounded-spend start",
+    "example:x402": "yarn build:packages && yarn workspace @policykit/example-x402-policykit start",
+    "typecheck:x402": "yarn build:packages && yarn workspace @policykit/example-x402-policykit typecheck"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

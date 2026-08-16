@@ -84,6 +84,22 @@ export {
   type PolicyTemplateName,
 } from "./templates";
 
+export {
+  X402_VERSION,
+  POLICYKIT_X402_SCHEME,
+  SOLANA_CAIP2,
+  X402ValidationError,
+  validatePolicyKitX402Payment,
+  createPolicyKitX402PaymentHeader,
+  encodeX402PaymentRequired,
+  type X402Resource,
+  type X402PaymentRequirements,
+  type X402PaymentRequired,
+  type PolicyKitX402Constraints,
+  type ValidatedPolicyKitX402Payment,
+  type X402ValidationErrorCode,
+} from "./x402";
+
 export { PolicyKitClient } from "./client";
 
 export type { Policykit } from "./idl-types";

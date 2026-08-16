@@ -1,0 +1,25 @@
+{
+  "name": "@policykit/example-x402-policykit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Reproducible x402 v2 custom-scheme payment settled through PolicyKit",
+  "scripts": {
+    "start": "ts-node --compiler-options '{\"module\":\"commonjs\"}' src/index.ts",
+    "typecheck": "tsc --noEmit --target ES2020 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck src/index.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@policykit/sdk": "0.1.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  }
+}
