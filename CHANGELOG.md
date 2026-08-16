@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rate-window context, and transparent max-damage assumptions.
 - Proof-loop health checks for schema integrity, future timestamps, unexpected
   latest-tick results, evidence signatures, and dashboard-copy drift.
+- Security operations runbook covering key separation, monitoring severity,
+  agent rotation, compromise response, and recovery drills.
+- Strict x402 v2 `PAYMENT-REQUIRED` validation and a reproducible
+  `policykit-exact` devnet example with quote expiry, replay protection, exact
+  token-delta verification, and honest custom-scheme boundaries.
 
 ### Changed
 
@@ -43,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   remaining daily budget.
 - Insufficient-vault integration coverage now verifies atomic rollback of all
   spend and action counters.
+- Dashboard demo-agent secrets are tab-scoped in `sessionStorage` and the UI
+  explicitly warns that browser signing is not production custody.
 
 ## [0.4.0] - 2026-07-31
 

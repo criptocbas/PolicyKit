@@ -50,7 +50,9 @@ Details: [docs/MAX_DAMAGE.md](./docs/MAX_DAMAGE.md) · Competitive honesty: [doc
 | [docs/DEVNET.md](./docs/DEVNET.md) | Devnet deploy + proof |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map |
 | [docs/SECURITY.md](./docs/SECURITY.md) | Invariants |
+| [docs/SECURITY_OPERATIONS.md](./docs/SECURITY_OPERATIONS.md) | Monitoring, key rotation, incident response |
 | [examples/agent-kit-bounded-spend](./examples/agent-kit-bounded-spend) | Gold-standard Agent Kit example |
+| [examples/x402-policykit](./examples/x402-policykit) | x402 v2 custom-scheme devnet settlement |
 
 ## Repo layout
 
@@ -95,6 +97,7 @@ yarn agent:tick       # allowed spend + 2 expected rejects → live-feed.json
 yarn agent:cron       # print / install local cron for ticks
 yarn demo:devnet      # one-shot snapshot proof (optional)
 yarn example:agent-kit  # gold-standard Agent Kit path
+yarn example:x402       # local HTTP 402 + verified devnet PolicyKit payment
 yarn dev:dashboard    # Live adversary feed + /p/<policy>
 ```
 

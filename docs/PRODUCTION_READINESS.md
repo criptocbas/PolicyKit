@@ -20,6 +20,8 @@ by itself evidence that a deployment is ready to custody production funds.
 - [ ] Exercise pause → clawback → rotate-agent recovery before funding.
 - [ ] Pin compatible SDK, plugin, Anchor, Node, and Solana versions.
 
+Operational procedures: [SECURITY_OPERATIONS.md](./SECURITY_OPERATIONS.md).
+
 ## Explicit deployment boundaries
 
 - Classic SPL Token only; Token-2022 accounts are unsupported.

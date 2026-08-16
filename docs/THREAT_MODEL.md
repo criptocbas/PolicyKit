@@ -22,7 +22,7 @@ Live proof: `yarn agent:tick` records allowed spends and intentional rejects.
 | Spend / rate counters | Policy PDA | Medium — integrity of limits |
 | Authority key | Off-chain (wallet / hardware) | **Critical** — full control |
 | Agent key | Off-chain hot key / agent host | High — spend within rules |
-| Demo agent secret | Dashboard `localStorage` | Demo-only — **not** production |
+| Demo agent secret | Dashboard tab `sessionStorage` | Demo-only — **not** production |
 
 ---
 
@@ -77,7 +77,7 @@ Live proof: `yarn agent:tick` records allowed spends and intentional rejects.
 | T9 | Default pubkey as agent | Unusable / unsafe policy | Rejected on create and `set_agent` | — |
 | T10 | Clock manipulation | Early expiry / window games | Relies on Solana `Clock` sysvar (same as rest of chain) | Validator-set trust |
 | T11 | Open deposit DoS | Fill vault with junk | Economic non-issue for classic SPL; clawback | Storage rent on many vault ATAs |
-| T12 | Dashboard demo agent in localStorage | Browser XSS steals demo agent | Demo-only; never production pattern | Explicit non-goal for dashboard demo |
+| T12 | Dashboard demo agent in sessionStorage | Browser XSS steals the tab-scoped demo agent | Demo-only; never production pattern | Explicit non-goal for dashboard demo |
 
 ### Worked example: spoofed intent (T2)
 
@@ -131,3 +131,4 @@ See [SECURITY.md](./SECURITY.md) § Operational recommendations. Summary:
 | [PROGRAM_DESIGN.md](./PROGRAM_DESIGN.md) | Account layout and instructions |
 | [ERROR_CATALOG.md](./ERROR_CATALOG.md) | Error codes and client titles |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System components |
+| [SECURITY_OPERATIONS.md](./SECURITY_OPERATIONS.md) | Key separation, monitoring, rotation, and incident response |

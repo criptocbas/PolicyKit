@@ -8,15 +8,8 @@ import BN from "bn.js";
 import { usePolicyKitClient } from "@/lib/policy-client";
 import { getOrCreateDemoAgent } from "@/lib/demo-agent";
 import { createDemoMint } from "@/lib/demo-mint";
-import {
-  ActivityItem,
-  loadActivity,
-  pushActivity,
-} from "@/lib/activity";
-import {
-  fetchChainActivity,
-  mergeActivity,
-} from "@/lib/chain-activity";
+import { ActivityItem, loadActivity, pushActivity } from "@/lib/activity";
+import { fetchChainActivity, mergeActivity } from "@/lib/chain-activity";
 import {
   loadPolicies,
   upsertPolicy,
@@ -103,12 +96,7 @@ export function DashboardApp() {
   }, []);
 
   const recordActivity = useCallback(
-    (
-      title: string,
-      signature?: string,
-      success = true,
-      detail?: string
-    ) => {
+    (title: string, signature?: string, success = true, detail?: string) => {
       setActivity(
         pushActivity({
           kind: success ? "spend_ok" : "spend_fail",
@@ -316,6 +304,13 @@ export function DashboardApp() {
             ({CLUSTER}). {walletClusterHint(CLUSTER)}
           </p>
         )}
+
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-300/90">
+          Demo signing only: the generated agent key is stored in this browser
+          tab&apos;s session storage. Do not use this control room as production
+          key custody. Production agents should use an isolated external signer
+          and hold fee SOL only.
+        </div>
 
         <section className="animate-fade-up" style={{ animationDelay: "60ms" }}>
           <div className="mb-2 flex items-center justify-between">
@@ -586,12 +581,17 @@ export function DashboardApp() {
             <CardContent className="space-y-2 text-sm text-mist-400">
               <Step
                 n={1}
-                text={`Connect wallet on ${CLUSTER} (${walletClusterHint(CLUSTER)})`}
+                text={`Connect wallet on ${CLUSTER} (${walletClusterHint(
+                  CLUSTER
+                )})`}
               />
               <Step n={2} text="Create demo mint (or paste mint)" />
               <Step n={3} text="Create Conservative trading policy" />
               <Step n={4} text="Deposit into the vault" />
-              <Step n={5} text="Allowed spend → Drift / outsider / over limit" />
+              <Step
+                n={5}
+                text="Allowed spend → Drift / outsider / over limit"
+              />
               <Step n={6} text="Open public max-damage page from status card" />
               <Step n={7} text="Show live adversary ticks + live proof cards" />
               <div className="mt-4 rounded-lg border border-ink-600 bg-ink-950/50 p-3 font-mono text-[11px] text-mist-500">

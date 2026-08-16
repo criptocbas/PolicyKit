@@ -58,7 +58,7 @@ back recorded counters.
 | Policy rules / counters | On-chain Policy PDA | Source of truth |
 | Vault balances | On-chain token accounts | PDA authority |
 | Activity feed (dashboard) | Browser session / localStorage | Demo only |
-| Demo agent secret | localStorage | **Not** production |
+| Demo agent secret | Tab-scoped sessionStorage | **Not** production |
 | Live adversary feed | Versioned public JSON | Demonstration metadata; verify submitted transactions against RPC |
 
 ## PDA seeds
