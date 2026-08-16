@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard safety classification for loaded, proposed, and updated policies,
   including explicit confirmation before unbounded or weakened configurations.
 - Versioned policy-template metadata and bounded-default regression tests.
+- Rust enforcement-invariant tests for exact boundaries, window rollover,
+  rejected-spend counter behavior, overflow, and timestamp saturation.
+- SDK/IDL error parity test and closer preflight parity for Policy PDA
+  destinations and counter overflow.
 
 ### Changed
 
@@ -30,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the dashboard feature inventory.
 - Maximum rate-window damage now accounts for actions already consumed and the
   remaining daily budget.
+- Insufficient-vault integration coverage now verifies atomic rollback of all
+  spend and action counters.
 
 ## [0.4.0] - 2026-07-31
 

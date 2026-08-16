@@ -1086,6 +1086,7 @@ describe("policykit", () => {
     );
     const vault = await ensureVault(pda, usdcMint);
     await deposit(pda, usdcMint, authorityUsdc, vault, oneUsdc(5));
+    const before = await program.account.policy.fetch(pda);
 
     try {
       await executeSpend(pda, usdcMint, vault, agentUsdc, oneUsdc(10), JUPITER_V6);
@@ -1093,6 +1094,10 @@ describe("policykit", () => {
     } catch (e) {
       expectError(e, "InsufficientVaultBalance");
     }
+    const after = await program.account.policy.fetch(pda);
+    expect(after.spentToday.toString()).to.equal(before.spentToday.toString());
+    expect(after.totalSpent.toString()).to.equal(before.totalSpent.toString());
+    expect(after.actionsInWindow).to.equal(before.actionsInWindow);
   });
 
   it("rejects spend when vault authority is not the policy PDA", async () => {

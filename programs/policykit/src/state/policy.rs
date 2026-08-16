@@ -297,3 +297,189 @@ impl Policy {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const NOW: i64 = 1_700_000_000;
+
+    fn test_policy() -> Policy {
+        let spend_mint = Pubkey::new_unique();
+        Policy {
+            authority: Pubkey::new_unique(),
+            agent: Pubkey::new_unique(),
+            policy_id: 1,
+            bump: 255,
+            paused: false,
+            created_at: NOW,
+            expires_at: NOW + SECONDS_PER_DAY,
+            spend_mint,
+            max_per_transaction: 20,
+            max_per_day: 50,
+            spent_today: 10,
+            day_start_ts: NOW,
+            total_spent: 10,
+            max_actions_per_window: 5,
+            window_seconds: 60,
+            actions_in_window: 1,
+            window_start_ts: NOW,
+            program_allowlist_enabled: true,
+            program_allowlist: vec![Pubkey::new_unique()],
+            program_denylist_enabled: false,
+            program_denylist: vec![],
+            mint_allowlist_enabled: true,
+            mint_allowlist: vec![spend_mint],
+            destination_allowlist_enabled: true,
+            destination_allowlist: vec![Pubkey::new_unique()],
+        }
+    }
+
+    fn allowed_values(policy: &Policy) -> (Pubkey, Pubkey, Pubkey) {
+        (
+            policy.spend_mint,
+            policy.program_allowlist[0],
+            policy.destination_allowlist[0],
+        )
+    }
+
+    #[test]
+    fn exact_limits_succeed_and_record_once() {
+        let mut policy = test_policy();
+        policy.spent_today = 30;
+        let (mint, intent, destination) = allowed_values(&policy);
+
+        policy
+            .check_and_record_spend(20, &mint, &intent, &destination, NOW)
+            .unwrap();
+
+        assert_eq!(policy.spent_today, 50);
+        assert_eq!(policy.total_spent, 30);
+        assert_eq!(policy.actions_in_window, 2);
+        assert_eq!(policy.remaining_daily(), 0);
+    }
+
+    #[test]
+    fn day_and_rate_boundaries_reset_before_recording() {
+        let mut policy = test_policy();
+        policy.spent_today = policy.max_per_day;
+        policy.actions_in_window = policy.max_actions_per_window;
+        let (mint, intent, destination) = allowed_values(&policy);
+
+        policy
+            .check_and_record_spend(1, &mint, &intent, &destination, NOW + SECONDS_PER_DAY)
+            .unwrap();
+
+        assert_eq!(policy.spent_today, 1);
+        assert_eq!(policy.actions_in_window, 1);
+        assert_eq!(policy.day_start_ts, NOW + SECONDS_PER_DAY);
+        assert_eq!(policy.window_start_ts, NOW + SECONDS_PER_DAY);
+    }
+
+    #[test]
+    fn multi_day_refresh_preserves_bucket_alignment() {
+        let mut policy = test_policy();
+        policy.refresh_windows(NOW + 3 * SECONDS_PER_DAY + 17);
+
+        assert_eq!(policy.day_start_ts, NOW + 3 * SECONDS_PER_DAY);
+        assert_eq!(policy.spent_today, 0);
+        assert_eq!(policy.window_start_ts, NOW + 3 * SECONDS_PER_DAY + 17);
+        assert_eq!(policy.actions_in_window, 0);
+    }
+
+    #[test]
+    fn rejected_rule_checks_do_not_record_spend_counters() {
+        let base = test_policy();
+        let (mint, intent, destination) = allowed_values(&base);
+        let cases = [
+            (0, mint, intent, destination),
+            (21, mint, intent, destination),
+            (1, Pubkey::new_unique(), intent, destination),
+            (1, mint, Pubkey::new_unique(), destination),
+            (1, mint, intent, Pubkey::new_unique()),
+        ];
+
+        for (amount, case_mint, case_intent, case_destination) in cases {
+            let mut policy = test_policy();
+            // Use the same allowlisted values from this fresh policy except for
+            // the field intentionally changed by the matrix case.
+            let own = allowed_values(&policy);
+            let resolved_mint = if case_mint == mint { own.0 } else { case_mint };
+            let resolved_intent = if case_intent == intent {
+                own.1
+            } else {
+                case_intent
+            };
+            let resolved_destination = if case_destination == destination {
+                own.2
+            } else {
+                case_destination
+            };
+            let before = (
+                policy.spent_today,
+                policy.total_spent,
+                policy.actions_in_window,
+            );
+
+            assert!(policy
+                .check_and_record_spend(
+                    amount,
+                    &resolved_mint,
+                    &resolved_intent,
+                    &resolved_destination,
+                    NOW,
+                )
+                .is_err());
+            assert_eq!(
+                (
+                    policy.spent_today,
+                    policy.total_spent,
+                    policy.actions_in_window,
+                ),
+                before
+            );
+        }
+    }
+
+    #[test]
+    fn rate_and_daily_rejections_do_not_record() {
+        let mut rate_limited = test_policy();
+        rate_limited.actions_in_window = rate_limited.max_actions_per_window;
+        let (mint, intent, destination) = allowed_values(&rate_limited);
+        assert!(rate_limited
+            .check_and_record_spend(1, &mint, &intent, &destination, NOW)
+            .is_err());
+        assert_eq!(rate_limited.total_spent, 10);
+
+        let mut daily_limited = test_policy();
+        daily_limited.spent_today = daily_limited.max_per_day;
+        let (mint, intent, destination) = allowed_values(&daily_limited);
+        assert!(daily_limited
+            .check_and_record_spend(1, &mint, &intent, &destination, NOW)
+            .is_err());
+        assert_eq!(daily_limited.total_spent, 10);
+        assert_eq!(daily_limited.actions_in_window, 1);
+    }
+
+    #[test]
+    fn lifetime_counter_overflow_fails_cleanly() {
+        let mut policy = test_policy();
+        policy.total_spent = u64::MAX;
+        let (mint, intent, destination) = allowed_values(&policy);
+
+        assert!(policy
+            .check_and_record_spend(1, &mint, &intent, &destination, NOW)
+            .is_err());
+    }
+
+    #[test]
+    fn timestamp_saturation_never_panics() {
+        let mut policy = test_policy();
+        policy.day_start_ts = i64::MAX - 1;
+        policy.window_start_ts = i64::MAX - 1;
+        policy.refresh_windows(i64::MAX);
+
+        assert_eq!(policy.day_start_ts, i64::MAX - 1);
+        assert_eq!(policy.window_start_ts, i64::MAX - 1);
+    }
+}

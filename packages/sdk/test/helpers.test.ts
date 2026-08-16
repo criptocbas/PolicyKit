@@ -253,6 +253,36 @@ describe("previewSpend", () => {
     );
     expect(r).to.deep.equal({ ok: true });
   });
+
+  it("rejects a destination owned by the policy PDA when address is provided", () => {
+    const policyAddress = AUTHORITY;
+    const r = previewSpend(makePolicy(), {
+      amount: 1_000_000,
+      mint: SPEND_MINT,
+      intentProgram: JUPITER,
+      destinationOwner: policyAddress,
+      policyAddress,
+      nowSec: now,
+    });
+    expect(r.ok).to.equal(false);
+    if (!r.ok) expect(r.errorName).to.equal("InvalidDestination");
+  });
+
+  it("rejects lifetime counter overflow", () => {
+    const r = previewSpend(
+      makePolicy({
+        totalSpent: new BN("18446744073709551615"),
+      }),
+      {
+        amount: 1,
+        mint: SPEND_MINT,
+        intentProgram: JUPITER,
+        nowSec: now,
+      }
+    );
+    expect(r.ok).to.equal(false);
+    if (!r.ok) expect(r.errorName).to.equal("Overflow");
+  });
 });
 
 describe("computeMaxDamage", () => {

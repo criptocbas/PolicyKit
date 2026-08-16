@@ -6,6 +6,7 @@ import {
   mapPolicyKitError,
   type PolicyKitErrorName,
 } from "../src/errors";
+import idl from "../idl/policykit.json";
 
 describe("POLICYKIT_ERROR_CODES catalog", () => {
   it("covers every code from 6000 through 6026 exactly once", () => {
@@ -24,6 +25,16 @@ describe("POLICYKIT_ERROR_CODES catalog", () => {
         .and.not.empty;
       expect(POLICYKIT_ERROR_TITLES[name], `title for ${name}`).to.be.a("string").and
         .not.empty;
+    }
+  });
+
+  it("matches the bundled Anchor IDL error names and codes", () => {
+    const idlErrors = new Map(
+      idl.errors.map((error) => [error.name, error.code])
+    );
+    expect(idlErrors.size).to.equal(Object.keys(POLICYKIT_ERROR_CODES).length);
+    for (const [name, code] of Object.entries(POLICYKIT_ERROR_CODES)) {
+      expect(idlErrors.get(name), `IDL code for ${name}`).to.equal(code);
     }
   });
 
