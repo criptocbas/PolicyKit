@@ -34,8 +34,7 @@
   },
   "files": [
     "dist",
-    "idl",
-    "src"
+    "idl"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
