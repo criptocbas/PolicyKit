@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { POLICYKIT_PROGRAM_ID, type LiveFeedEvidence } from "@policykit/sdk";
+import { POLICYKIT_PROGRAM_ID } from "@policykit/sdk";
 
 export const ROOT = path.join(__dirname, "..", "..");
 export const PROOF_DIR = path.join(ROOT, "proof");
@@ -49,6 +49,12 @@ export const PROGRAM_ID = process.env.PROGRAM_ID
 
 export const DECIMALS = 6;
 export const ui = (n: number) => n * 10 ** DECIMALS;
+
+export type LiveFeedEvidence =
+  | "onchain_success"
+  | "onchain_rejection"
+  | "preflight_rejection"
+  | "local_observation";
 
 export type LiveConfig = {
   cluster: string;
