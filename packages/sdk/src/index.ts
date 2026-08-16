@@ -51,6 +51,16 @@ export {
 export { computeMaxDamage, type MaxDamageReport } from "./max-damage";
 
 export {
+  assessPolicySafety,
+  type PolicySafetyAssessment,
+  type PolicySafetyAssessmentOptions,
+  type PolicySafetyFinding,
+  type PolicySafetyFindingCode,
+  type PolicySafetyLevel,
+  type SafetyFindingSeverity,
+} from "./safety-assessment";
+
+export {
   assessFreshness,
   formatRelativeAge,
   freshnessBadgeVariant,

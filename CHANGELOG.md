@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public policy page embeds filtered adversary ticks.
 - `yarn agent:cron` helper and improved Agent Kit bounded-spend example (status, max damage, dest reject).
 - Production-readiness checklist covering custody, monitoring, recovery, and release evidence.
+- SDK `assessPolicySafety` API with machine-readable configuration findings and
+  current-window maximum-damage context.
 
 ### Changed
 
@@ -23,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with the on-chain handler.
 - Marked completed implementation plans as historical snapshots and refreshed
   the dashboard feature inventory.
+- Maximum rate-window damage now accounts for actions already consumed and the
+  remaining daily budget.
 
 ## [0.4.0] - 2026-07-31
 
