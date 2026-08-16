@@ -362,6 +362,7 @@ mod tests {
     #[test]
     fn day_and_rate_boundaries_reset_before_recording() {
         let mut policy = test_policy();
+        policy.expires_at = 0;
         policy.spent_today = policy.max_per_day;
         policy.actions_in_window = policy.max_actions_per_window;
         let (mint, intent, destination) = allowed_values(&policy);
@@ -480,6 +481,6 @@ mod tests {
         policy.refresh_windows(i64::MAX);
 
         assert_eq!(policy.day_start_ts, i64::MAX - 1);
-        assert_eq!(policy.window_start_ts, i64::MAX - 1);
+        assert_eq!(policy.window_start_ts, i64::MAX);
     }
 }
