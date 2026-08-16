@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Package release metadata, stable-export regression coverage, version
   compatibility policy, artifact review checklist, and a fast local verification
   command.
+- CPI-mediation research RFC covering protocol adapters, signed quotes,
+  account-substitution risks, migration questions, and implementation gates.
 
 ### Changed
 
