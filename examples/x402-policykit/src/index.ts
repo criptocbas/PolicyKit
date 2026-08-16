@@ -3,7 +3,6 @@ import * as path from "path";
 import { randomUUID } from "crypto";
 import { createServer } from "http";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import {
@@ -26,6 +25,19 @@ const RPC_URL = process.env.RPC_URL ?? "https://api.devnet.solana.com";
 const PORT = Number(process.env.PORT ?? 3402);
 const PRICE = new BN(process.env.X402_PRICE ?? "1000000");
 const MAX_PRICE = new BN(process.env.X402_MAX_PRICE ?? "2000000");
+const TOKEN_PROGRAM_ID = new PublicKey(
+  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+);
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey(
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+);
+
+function associatedTokenAddress(mint: PublicKey, owner: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  )[0];
+}
 
 function loadAgent(filePath: string): Keypair {
   const bytes = JSON.parse(fs.readFileSync(filePath, "utf8")) as number[];
@@ -68,7 +80,7 @@ async function main() {
   const intentProgram = new PublicKey(
     process.env.X402_INTENT_PROGRAM ?? KNOWN_PROGRAMS.JUPITER_V6.toBase58()
   );
-  const payToToken = getAssociatedTokenAddressSync(asset, payTo, true);
+  const payToToken = associatedTokenAddress(asset, payTo);
   if (!(await connection.getAccountInfo(payToToken))) {
     throw new Error(
       `Recipient ATA ${payToToken.toBase58()} does not exist. Create it before running the example.`
@@ -265,6 +277,7 @@ async function verifySettlement(args: {
   const blockTime = transaction.blockTime;
   if (
     blockTime === null ||
+    blockTime === undefined ||
     blockTime < args.issuedAt - 5 ||
     blockTime > args.expiresAt
   ) {
