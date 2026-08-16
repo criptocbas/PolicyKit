@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import {
   POLICY_TEMPLATES,
   PolicyTemplateName,
   KNOWN_PROGRAMS,
   PolicyKitClient,
+  assessPolicySafety,
 } from "@policykit/sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { fromUiAmount } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PolicySafetySummary } from "@/components/policy-safety-summary";
 
 
 import { friendlyErrorMessage } from "@/lib/wallet-errors";
@@ -65,6 +67,7 @@ export function CreatePolicyPanel({
   const [maxPerDay, setMaxPerDay] = useState("50");
   const [maxActions, setMaxActions] = useState("10");
   const [windowSeconds, setWindowSeconds] = useState("60");
+  const [confirmUnbounded, setConfirmUnbounded] = useState(false);
   // Stable default for SSR; set a unique id once on the client.
   const [policyId, setPolicyId] = useState("1");
 
@@ -88,6 +91,42 @@ export function CreatePolicyPanel({
     setWindowSeconds(String(defaults.windowSeconds));
   }, [template, agentPubkey, spendMint]);
 
+  const draftParams = useMemo(() => {
+    if (!spendMint) return null;
+    const base = POLICY_TEMPLATES[template]({
+      agent: agentPubkey,
+      spendMint,
+      decimals: 6,
+      extraPrograms:
+        template === "x402Payments" ? [KNOWN_PROGRAMS.JUPITER_V6] : undefined,
+    });
+    return {
+      ...base,
+      maxPerTransaction: fromUiAmount(maxPerTx),
+      maxPerDay: fromUiAmount(maxPerDay),
+      maxActionsPerWindow: Number(maxActions) || 0,
+      windowSeconds: Number(windowSeconds) || 0,
+      programAllowlistEnabled: true,
+      programAllowlist:
+        base.programAllowlist.length > 0
+          ? base.programAllowlist
+          : [KNOWN_PROGRAMS.JUPITER_V6],
+    };
+  }, [
+    agentPubkey,
+    maxActions,
+    maxPerDay,
+    maxPerTx,
+    spendMint,
+    template,
+    windowSeconds,
+  ]);
+  const assessment = draftParams ? assessPolicySafety(draftParams) : null;
+
+  useEffect(() => {
+    setConfirmUnbounded(false);
+  }, [maxPerTx, maxPerDay, maxActions, windowSeconds, template]);
+
   async function handleCreate() {
     if (!spendMint) {
       onError("Create a demo mint or set a spend mint first.");
@@ -95,30 +134,31 @@ export function CreatePolicyPanel({
     }
     setBusy(true);
     try {
-      const base = POLICY_TEMPLATES[template]({
-        agent: agentPubkey,
-        spendMint,
-        decimals: 6,
-        extraPrograms:
-          template === "x402Payments"
-            ? [KNOWN_PROGRAMS.JUPITER_V6]
-            : undefined,
-      });
-      const params = {
-        ...base,
-        maxPerTransaction: fromUiAmount(maxPerTx),
-        maxPerDay: fromUiAmount(maxPerDay),
-        maxActionsPerWindow: Number(maxActions) || 0,
-        windowSeconds: Number(windowSeconds) || 60,
-        // Ensure x402 always has a program to allow for demo
-        programAllowlistEnabled: true,
-        programAllowlist:
-          base.programAllowlist.length > 0
-            ? base.programAllowlist
-            : [KNOWN_PROGRAMS.JUPITER_V6],
-      };
+      if (!draftParams || !assessment) return;
+      if (
+        draftParams.maxPerTransaction.isNeg() ||
+        draftParams.maxPerDay.isNeg() ||
+        !Number.isInteger(draftParams.maxActionsPerWindow) ||
+        draftParams.maxActionsPerWindow < 0 ||
+        !Number.isInteger(draftParams.windowSeconds) ||
+        draftParams.windowSeconds < 0
+      ) {
+        onError("Limits must be non-negative whole values.");
+        return;
+      }
+      if (
+        draftParams.maxActionsPerWindow > 0 &&
+        draftParams.windowSeconds === 0
+      ) {
+        onError("Window seconds must be greater than zero when rate limiting is enabled.");
+        return;
+      }
+      if (assessment.level === "unbounded" && !confirmUnbounded) {
+        onError("Confirm the unbounded configuration before creating it.");
+        return;
+      }
       const id = Number(policyId) || Date.now() % 1_000_000;
-      const { policy, signature } = await client.createPolicy(id, params);
+      const { policy, signature } = await client.createPolicy(id, draftParams);
       onActivity(`Created policy #${id}`, signature);
       onCreated(policy, id);
     } catch (e: unknown) {
@@ -191,9 +231,28 @@ export function CreatePolicyPanel({
           · Allowlist includes Jupiter by default
         </p>
 
+        {assessment && <PolicySafetySummary assessment={assessment} />}
+
+        {assessment?.level === "unbounded" && (
+          <label className="flex items-start gap-2 text-xs text-coral-300">
+            <input
+              type="checkbox"
+              checked={confirmUnbounded}
+              onChange={(event) => setConfirmUnbounded(event.target.checked)}
+              className="mt-0.5 rounded border-ink-600"
+            />
+            I understand this configuration is unbounded or invalid and want to
+            submit it deliberately.
+          </label>
+        )}
+
         <Button
           className="w-full"
-          disabled={busy || !spendMint}
+          disabled={
+            busy ||
+            !spendMint ||
+            (assessment?.level === "unbounded" && !confirmUnbounded)
+          }
           onClick={handleCreate}
         >
           {busy ? "Creating…" : "Create policy"}

@@ -56,6 +56,7 @@ export {
   type PolicySafetyAssessmentOptions,
   type PolicySafetyFinding,
   type PolicySafetyFindingCode,
+  type PolicySafetyInput,
   type PolicySafetyLevel,
   type SafetyFindingSeverity,
 } from "./safety-assessment";
@@ -73,10 +74,12 @@ export {
 
 export {
   POLICY_TEMPLATES,
+  POLICY_TEMPLATE_METADATA,
   conservativeTradingTemplate,
   x402PaymentsTemplate,
   researchLimitedSpendTemplate,
   type TemplateContext,
+  type PolicyTemplateMetadata,
   type PolicyTemplateName,
 } from "./templates";
 

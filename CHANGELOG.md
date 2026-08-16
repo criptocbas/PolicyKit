@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Production-readiness checklist covering custody, monitoring, recovery, and release evidence.
 - SDK `assessPolicySafety` API with machine-readable configuration findings and
   current-window maximum-damage context.
+- Dashboard safety classification for loaded, proposed, and updated policies,
+  including explicit confirmation before unbounded or weakened configurations.
+- Versioned policy-template metadata and bounded-default regression tests.
 
 ### Changed
 

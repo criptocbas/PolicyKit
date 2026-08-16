@@ -45,6 +45,35 @@ export interface PolicySafetyAssessmentOptions {
   vaultBalance?: BN;
 }
 
+/**
+ * Policy fields needed for safety analysis. Both decoded Policy accounts and
+ * create/update form values can be assessed without an RPC round trip.
+ */
+export interface PolicySafetyInput {
+  agent: PublicKey;
+  spendMint: PublicKey;
+  expiresAt: BN | number;
+  maxPerTransaction: BN | number;
+  maxPerDay: BN | number;
+  maxActionsPerWindow: number;
+  windowSeconds: number;
+  programAllowlistEnabled: boolean;
+  programAllowlist: PublicKey[];
+  programDenylistEnabled: boolean;
+  programDenylist: PublicKey[];
+  mintAllowlistEnabled: boolean;
+  mintAllowlist: PublicKey[];
+  destinationAllowlistEnabled: boolean;
+  destinationAllowlist: PublicKey[];
+  paused?: boolean;
+  spentToday?: BN;
+  dayStartTs?: BN;
+  totalSpent?: BN;
+  actionsInWindow?: number;
+  windowStartTs?: BN;
+  authority?: PublicKey;
+}
+
 const ZERO_KEY = PublicKey.default;
 
 function finding(
@@ -56,16 +85,54 @@ function finding(
   return { code, severity, title, detail };
 }
 
+function toBn(value: BN | number): BN {
+  return BN.isBN(value) ? value : new BN(value);
+}
+
+function normalizePolicy(
+  input: PolicySafetyInput,
+  nowSec: number
+): PolicyAccount {
+  return {
+    authority: input.authority ?? ZERO_KEY,
+    agent: input.agent,
+    policyId: new BN(0),
+    bump: 0,
+    paused: input.paused ?? false,
+    createdAt: new BN(nowSec),
+    expiresAt: toBn(input.expiresAt),
+    spendMint: input.spendMint,
+    maxPerTransaction: toBn(input.maxPerTransaction),
+    maxPerDay: toBn(input.maxPerDay),
+    spentToday: input.spentToday ?? new BN(0),
+    dayStartTs: input.dayStartTs ?? new BN(nowSec),
+    totalSpent: input.totalSpent ?? new BN(0),
+    maxActionsPerWindow: input.maxActionsPerWindow,
+    windowSeconds: input.windowSeconds,
+    actionsInWindow: input.actionsInWindow ?? 0,
+    windowStartTs: input.windowStartTs ?? new BN(nowSec),
+    programAllowlistEnabled: input.programAllowlistEnabled,
+    programAllowlist: input.programAllowlist,
+    programDenylistEnabled: input.programDenylistEnabled,
+    programDenylist: input.programDenylist,
+    mintAllowlistEnabled: input.mintAllowlistEnabled,
+    mintAllowlist: input.mintAllowlist,
+    destinationAllowlistEnabled: input.destinationAllowlistEnabled,
+    destinationAllowlist: input.destinationAllowlist,
+  };
+}
+
 /**
  * Assess whether an on-chain policy uses PolicyKit's recommended production
  * controls. This is deterministic advisory analysis; the program remains the
  * enforcement source of truth.
  */
 export function assessPolicySafety(
-  policy: PolicyAccount,
+  input: PolicySafetyInput,
   options: PolicySafetyAssessmentOptions = {}
 ): PolicySafetyAssessment {
   const nowSec = options.nowSec ?? Math.floor(Date.now() / 1000);
+  const policy = normalizePolicy(input, nowSec);
   const findings: PolicySafetyFinding[] = [];
 
   if (policy.maxPerTransaction.isZero()) {

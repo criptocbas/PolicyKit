@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { PolicyKitClient, PolicyStatus, KNOWN_PROGRAMS } from "@policykit/sdk";
+import {
+  PolicyKitClient,
+  PolicyStatus,
+  KNOWN_PROGRAMS,
+  assessPolicySafety,
+} from "@policykit/sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { fromUiAmount, toUiAmount } from "@/lib/format";
 import { friendlyErrorMessage } from "@/lib/wallet-errors";
 import { Settings2 } from "lucide-react";
+import { PolicySafetySummary } from "@/components/policy-safety-summary";
 
 function parsePubkeyList(raw: string): PublicKey[] {
   return raw
@@ -47,6 +53,7 @@ export function UpdatePolicyPanel({
   const [programAllow, setProgramAllow] = useState(KNOWN_PROGRAMS.JUPITER_V6.toBase58());
   const [destAllow, setDestAllow] = useState("");
   const [destEnabled, setDestEnabled] = useState(true);
+  const [confirmWeaker, setConfirmWeaker] = useState(false);
 
   useEffect(() => {
     if (!status) return;
@@ -71,55 +78,130 @@ export function UpdatePolicyPanel({
     );
   }, [status]);
 
-  async function handleUpdate() {
-    if (!policy) return;
-    setBusy(true);
+  const draft = useMemo(() => {
+    if (!status) return null;
     try {
-      let programList: PublicKey[] = [];
-      try {
-        programList = parsePubkeyList(programAllow);
-      } catch {
-        onError("Invalid program allowlist pubkey");
-        return;
-      }
-      if (programList.length === 0) {
-        onError("Program allowlist cannot be empty when enabled");
-        return;
-      }
-
-      let destList: PublicKey[] = [];
-      if (destEnabled) {
-        try {
-          destList = parsePubkeyList(destAllow);
-        } catch {
-          onError("Invalid destination owner pubkey");
-          return;
-        }
-        if (destList.length === 0) {
-          onError("Destination allowlist enabled but empty");
-          return;
-        }
-      }
-
+      const programList = parsePubkeyList(programAllow);
+      const destinationList = destEnabled ? parsePubkeyList(destAllow) : [];
       const expiresAt = neverExpires
         ? 0
-        : Math.floor(Date.now() / 1000) + Math.max(1, Number(hoursFromNow) || 24) * 3600;
-
-      const sig = await client.updatePolicy(policy, {
+        : Math.floor(Date.now() / 1000) +
+          Math.max(1, Number(hoursFromNow) || 24) * 3600;
+      const params = {
         expiresAt,
         maxPerTransaction: fromUiAmount(maxPerTx),
         maxPerDay: fromUiAmount(maxPerDay),
         maxActionsPerWindow: Number(maxActions) || 0,
-        windowSeconds: Number(windowSeconds) || 60,
+        windowSeconds: Number(windowSeconds) || 0,
         programAllowlistEnabled: true,
         programAllowlist: programList,
         programDenylistEnabled: false,
         programDenylist: [],
         mintAllowlistEnabled: true,
-        mintAllowlist: status ? [status.spendMint] : [],
+        mintAllowlist: [status.spendMint],
         destinationAllowlistEnabled: destEnabled,
-        destinationAllowlist: destList,
-      });
+        destinationAllowlist: destinationList,
+      };
+      return {
+        params,
+        assessment: assessPolicySafety({
+          ...params,
+          agent: status.agent,
+          spendMint: status.spendMint,
+        }),
+      };
+    } catch {
+      return null;
+    }
+  }, [
+    destAllow,
+    destEnabled,
+    hoursFromNow,
+    maxActions,
+    maxPerDay,
+    maxPerTx,
+    neverExpires,
+    programAllow,
+    status,
+    windowSeconds,
+  ]);
+  const currentAssessment = status
+    ? assessPolicySafety(status.policy)
+    : null;
+  const safetyRank = { unbounded: 0, "partially-bounded": 1, bounded: 2 };
+  const weakensSafety =
+    !!draft &&
+    !!currentAssessment &&
+    safetyRank[draft.assessment.level] < safetyRank[currentAssessment.level];
+  const requiresConfirmation =
+    draft?.assessment.level === "unbounded" || weakensSafety;
+
+  useEffect(() => {
+    setConfirmWeaker(false);
+  }, [
+    destAllow,
+    destEnabled,
+    hoursFromNow,
+    maxActions,
+    maxPerDay,
+    maxPerTx,
+    neverExpires,
+    programAllow,
+    windowSeconds,
+  ]);
+
+  async function handleUpdate() {
+    if (!policy) return;
+    setBusy(true);
+    try {
+      if (!draft) {
+        onError("One or more policy values are invalid.");
+        return;
+      }
+      const { params } = draft;
+      if (params.programAllowlist.length === 0) {
+        onError("Program allowlist cannot be empty when enabled");
+        return;
+      }
+      if (
+        params.maxPerTransaction.isNeg() ||
+        params.maxPerDay.isNeg() ||
+        !Number.isInteger(params.maxActionsPerWindow) ||
+        params.maxActionsPerWindow < 0 ||
+        !Number.isInteger(params.windowSeconds) ||
+        params.windowSeconds < 0
+      ) {
+        onError("Limits must be non-negative whole values.");
+        return;
+      }
+      if (params.maxActionsPerWindow > 0 && params.windowSeconds === 0) {
+        onError("Window seconds must be greater than zero when rate limiting is enabled.");
+        return;
+      }
+      if (requiresConfirmation && !confirmWeaker) {
+        onError("Confirm the weaker or unbounded configuration before updating.");
+        return;
+      }
+      try {
+        parsePubkeyList(programAllow);
+      } catch {
+        onError("Invalid program allowlist pubkey");
+        return;
+      }
+      if (destEnabled) {
+        try {
+          parsePubkeyList(destAllow);
+        } catch {
+          onError("Invalid destination owner pubkey");
+          return;
+        }
+        if (params.destinationAllowlist.length === 0) {
+          onError("Destination allowlist enabled but empty");
+          return;
+        }
+      }
+
+      const sig = await client.updatePolicy(policy, params);
       onActivity("Policy updated", sig);
       onDone();
     } catch (e: unknown) {
@@ -197,9 +279,30 @@ export function UpdatePolicyPanel({
           </div>
         )}
 
+        {draft && <PolicySafetySummary assessment={draft.assessment} />}
+
+        {requiresConfirmation && (
+          <label className="flex items-start gap-2 text-xs text-coral-300">
+            <input
+              type="checkbox"
+              checked={confirmWeaker}
+              onChange={(event) => setConfirmWeaker(event.target.checked)}
+              className="mt-0.5 rounded border-ink-600"
+            />
+            I understand this update weakens the current safety posture or
+            creates an unbounded configuration.
+          </label>
+        )}
+
         <Button
           className="w-full"
-          disabled={busy || !policy || !status}
+          disabled={
+            busy ||
+            !policy ||
+            !status ||
+            !draft ||
+            (requiresConfirmation && !confirmWeaker)
+          }
           onClick={handleUpdate}
         >
           {busy ? "Updating…" : "Update on-chain"}

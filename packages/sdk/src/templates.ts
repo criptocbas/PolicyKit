@@ -19,7 +19,53 @@ export interface TemplateContext {
   destinationAllowlistEnabled?: boolean;
 }
 
+export interface PolicyTemplateMetadata {
+  version: 1;
+  intendedUse: string;
+  riskProfile: "bounded-default";
+  assumptions: readonly string[];
+}
+
+export const POLICY_TEMPLATE_METADATA: Record<
+  "conservativeTrading" | "x402Payments" | "researchLimitedSpend",
+  PolicyTemplateMetadata
+> = {
+  conservativeTrading: {
+    version: 1,
+    intendedUse: "Small, rate-limited trading-agent vaults",
+    riskProfile: "bounded-default",
+    assumptions: [
+      "Six-decimal spend mint unless overridden",
+      "Jupiter is declared intent, not CPI proof",
+      "Destination owners are explicitly controlled",
+    ],
+  },
+  x402Payments: {
+    version: 1,
+    intendedUse: "Low-value API and x402-style payments",
+    riskProfile: "bounded-default",
+    assumptions: [
+      "Integrator supplies the actual facilitator or payment program",
+      "Recipient owners are known before production use",
+      "HTTP service behavior is outside on-chain enforcement",
+    ],
+  },
+  researchLimitedSpend: {
+    version: 1,
+    intendedUse: "Short-lived research agents with small budgets",
+    riskProfile: "bounded-default",
+    assumptions: [
+      "Policy is created close to use because expiry is computed at creation",
+      "Jupiter is declared intent, not CPI proof",
+      "Destination owners are explicitly controlled",
+    ],
+  },
+};
+
 function ui(amount: number, decimals: number): BN {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 18) {
+    throw new RangeError("Token decimals must be an integer from 0 through 18");
+  }
   return new BN(amount).mul(new BN(10).pow(new BN(decimals)));
 }
 
