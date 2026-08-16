@@ -5,7 +5,7 @@
   "description": "Reproducible x402 v2 custom-scheme payment settled through PolicyKit",
   "scripts": {
     "start": "ts-node --compiler-options '{\"module\":\"commonjs\"}' src/index.ts",
-    "typecheck": "tsc --noEmit --target ES2020 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck src/index.ts"
+    "typecheck": "tsc -p tsconfig.json"
   },
   "engines": {
     "node": ">=22"
