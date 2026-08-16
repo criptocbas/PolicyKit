@@ -45,6 +45,12 @@ signature and explorer record, but it emits no success event and commits no
 counter changes. Proof surfaces must label these two rejection classes
 separately.
 
+The live agent runner bypasses RPC preflight only for its two expected devnet
+rejections, confirms that each transaction failed with the expected PolicyKit
+error, and publishes the signature as `onchain_rejection` evidence. This is a
+demonstration mechanism, not a recommendation to disable preflight in normal
+agent integrations.
+
 ## Dashboard against devnet
 
 ```bash

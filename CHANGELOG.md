@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rejected-spend counter behavior, overflow, and timestamp saturation.
 - SDK/IDL error parity test and closer preflight parity for Policy PDA
   destinations and counter overflow.
+- Version 2 proof-feed contract with explicit on-chain/preflight/local evidence,
+  schema validation, atomic writes, slots, block times, and signatures for
+  intentionally rejected devnet transactions.
+- Public proof safety classification, linked authority/agent/mint identities,
+  rate-window context, and transparent max-damage assumptions.
+- Proof-loop health checks for schema integrity, future timestamps, unexpected
+  latest-tick results, evidence signatures, and dashboard-copy drift.
 
 ### Changed
 

@@ -38,8 +38,10 @@ yarn agent:tick
 Each tick:
 
 1. Allowed spend (Jupiter → agent ATA) — or skip if daily budget exhausted  
-2. Drift intent → expect `ProgramNotAllowed`  
-3. Outsider destination → expect `DestinationNotAllowed`  
+2. Drift intent → submit with preflight bypassed and verify the failed
+   `ProgramNotAllowed` transaction on-chain
+3. Outsider destination → submit with preflight bypassed and verify the failed
+   `DestinationNotAllowed` transaction on-chain
 
 Updates `proof/live-feed.json` and `apps/dashboard/public/proof/live-feed.json`.
 
@@ -47,7 +49,7 @@ Updates `proof/live-feed.json` and `apps/dashboard/public/proof/live-feed.json`.
 
 | Check | Result |
 |-------|--------|
-| `yarn agent:tick` | **OK** — allowed + ProgramNotAllowed + DestinationNotAllowed |
+| `yarn agent:tick` | **OK** — accepted spend plus signed on-chain ProgramNotAllowed and DestinationNotAllowed failures |
 | Policy | `GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n` (see `proof/live-config.json`) |
 | Keys committed | **No** — `proof/.agent-keypair.json` gitignored (`**/.agent-keypair.json`) |
 
@@ -80,7 +82,7 @@ bash scripts/live-agent/install-cron.sh --install
 ### Health check
 
 ```bash
-bash scripts/live-agent/feed-health.sh 24   # exit 1 if feed older than 24h
+bash scripts/live-agent/feed-health.sh 24   # freshness, schema, latest tick, and public-copy integrity
 ```
 
 Do **not** put mainnet keys in GitHub Actions. Prefer local systemd/cron with a throwaway **devnet-only** agent key.
@@ -91,17 +93,27 @@ Do **not** put mainnet keys in GitHub Actions. Prefer local systemd/cron with a 
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "updatedAt": "ISO-8601",
   "cluster": "devnet",
   "policy": "<policy pda>",
   "programId": "<program id>",
   "tickCount": 12,
-  "events": [ /* newest first */ ]
+  "events": [
+    {
+      "kind": "reject_program",
+      "evidence": "onchain_rejection",
+      "signature": "<failed transaction signature>",
+      "slot": 123
+    }
+  ]
 }
 ```
 
-The dashboard shows **freshness** from `updatedAt` (live &lt; 6h, recent &lt; 48h, else stale).
+Evidence is one of `onchain_success`, `onchain_rejection`,
+`preflight_rejection`, or `local_observation`. On-chain claims require a
+transaction signature. The dashboard validates this contract and shows
+**freshness** from `updatedAt` (live &lt; 6h, recent &lt; 48h, else stale).
 
 ## GHA design note (not implemented — needs EngLead OK)
 

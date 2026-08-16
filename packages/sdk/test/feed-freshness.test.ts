@@ -25,10 +25,8 @@ describe("assessFreshness", () => {
       assessFreshness(new Date(now - 60_000).toISOString(), now).level
     ).to.equal("live");
     expect(
-      assessFreshness(
-        new Date(now - FRESHNESS_MS.live - 1).toISOString(),
-        now
-      ).level
+      assessFreshness(new Date(now - FRESHNESS_MS.live - 1).toISOString(), now)
+        .level
     ).to.equal("recent");
     expect(
       assessFreshness(
@@ -77,5 +75,46 @@ describe("parseLiveFeed", () => {
     expect(p.events).to.have.length(2);
     expect(p.updatedAt).to.equal("2026-08-04T10:00:00.000Z");
     expect(p.policy).to.equal("GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n");
+    expect(p.valid).to.equal(true);
+  });
+
+  it("rejects version 2 on-chain claims without signatures", () => {
+    const now = Date.parse("2026-08-04T12:00:00.000Z");
+    const p = parseLiveFeed(
+      {
+        version: 2,
+        updatedAt: "2026-08-04T10:00:00.000Z",
+        cluster: "devnet",
+        policy: "GG9quehB9FZEexttoxanCxapSFMHxDhZ5gGV6wsHe66n",
+        programId: "AoTJDX2z2ej5r4UUKCofEbgDUXApWpGhQnvfk8seZf27",
+        events: [
+          {
+            ts: "2026-08-04T10:00:00.000Z",
+            kind: "reject_program",
+            ok: true,
+            evidence: "onchain_rejection",
+          },
+        ],
+      },
+      now
+    );
+    expect(p.valid).to.equal(false);
+    expect(p.issues.join(" ")).to.include("without a transaction signature");
+  });
+
+  it("rejects future-dated and malformed proof data", () => {
+    const now = Date.parse("2026-08-04T12:00:00.000Z");
+    const p = parseLiveFeed(
+      {
+        version: 2,
+        updatedAt: "2026-08-05T12:00:00.000Z",
+        policy: "not-a-key",
+        programId: "also-not-a-key",
+        events: [{ ts: "invalid", kind: "allowed", ok: true }],
+      },
+      now
+    );
+    expect(p.valid).to.equal(false);
+    expect(p.issues).to.have.length.greaterThan(2);
   });
 });

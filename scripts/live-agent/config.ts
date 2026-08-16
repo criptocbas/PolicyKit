@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { POLICYKIT_PROGRAM_ID } from "@policykit/sdk";
+import { POLICYKIT_PROGRAM_ID, type LiveFeedEvidence } from "@policykit/sdk";
 
 export const ROOT = path.join(__dirname, "..", "..");
 export const PROOF_DIR = path.join(ROOT, "proof");
@@ -76,9 +76,12 @@ export type TickEvent = {
     | "skip_budget"
     | "error";
   ok: boolean;
+  evidence: LiveFeedEvidence;
   errorName?: string;
   errorTitle?: string;
   signature?: string;
+  slot?: number;
+  blockTime?: number | null;
   remainingDaily?: string | null;
   message?: string;
   explorer?: { tx?: string; policy: string };
@@ -86,7 +89,7 @@ export type TickEvent = {
 
 /** Versioned feed document written by agent:tick (array still accepted by dashboard). */
 export type LiveFeedDocument = {
-  version: 1;
+  version: 2;
   updatedAt: string;
   cluster: string;
   policy: string;
@@ -106,18 +109,14 @@ export function loadKeypair(filePath: string): Keypair {
 export function saveKeypair(filePath: string, kp: Keypair): void {
   const dir = path.dirname(filePath);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(
-    filePath,
-    JSON.stringify(Array.from(kp.secretKey)),
-    { mode: 0o600 }
-  );
+  fs.writeFileSync(filePath, JSON.stringify(Array.from(kp.secretKey)), {
+    mode: 0o600,
+  });
 }
 
 export function loadLiveConfig(): LiveConfig {
   if (!fs.existsSync(LIVE_CONFIG_PATH)) {
-    throw new Error(
-      `Missing ${LIVE_CONFIG_PATH}. Run: yarn agent:setup`
-    );
+    throw new Error(`Missing ${LIVE_CONFIG_PATH}. Run: yarn agent:setup`);
   }
   return JSON.parse(fs.readFileSync(LIVE_CONFIG_PATH, "utf8")) as LiveConfig;
 }
@@ -136,18 +135,37 @@ export function loadFeed(): TickEvent[] {
   try {
     if (!fs.existsSync(LIVE_FEED_PATH)) return [];
     const raw = JSON.parse(fs.readFileSync(LIVE_FEED_PATH, "utf8")) as unknown;
-    if (Array.isArray(raw)) return raw as TickEvent[];
+    if (Array.isArray(raw)) return normalizeLegacyEvents(raw as TickEvent[]);
     if (
       raw &&
       typeof raw === "object" &&
       Array.isArray((raw as LiveFeedDocument).events)
     ) {
-      return (raw as LiveFeedDocument).events;
+      return normalizeLegacyEvents((raw as LiveFeedDocument).events);
     }
     return [];
   } catch {
     return [];
   }
+}
+
+function normalizeLegacyEvents(events: TickEvent[]): TickEvent[] {
+  return events.map((event) => ({
+    ...event,
+    evidence:
+      event.evidence ??
+      (event.signature
+        ? "onchain_success"
+        : event.kind.startsWith("reject")
+        ? "preflight_rejection"
+        : "local_observation"),
+  }));
+}
+
+function writeFileAtomic(filePath: string, body: string): void {
+  const tempPath = `${filePath}.${process.pid}.tmp`;
+  fs.writeFileSync(tempPath, body);
+  fs.renameSync(tempPath, filePath);
 }
 
 /**
@@ -160,15 +178,17 @@ export function appendFeed(
 ): TickEvent[] {
   const prev = loadFeed();
   const next = [...events, ...prev].slice(0, 100);
-  const cfg = meta ?? (() => {
-    try {
-      return loadLiveConfig();
-    } catch {
-      return null;
-    }
-  })();
+  const cfg =
+    meta ??
+    (() => {
+      try {
+        return loadLiveConfig();
+      } catch {
+        return null;
+      }
+    })();
   const doc: LiveFeedDocument = {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     cluster: cfg?.cluster ?? "devnet",
     policy: cfg?.policy ?? next[0]?.explorer?.policy ?? "",
@@ -190,8 +210,8 @@ export function appendFeed(
   fs.mkdirSync(PROOF_DIR, { recursive: true });
   fs.mkdirSync(PUBLIC_PROOF_DIR, { recursive: true });
   const body = JSON.stringify(doc, null, 2);
-  fs.writeFileSync(LIVE_FEED_PATH, body);
-  fs.writeFileSync(LIVE_FEED_PUBLIC_PATH, body);
+  writeFileAtomic(LIVE_FEED_PATH, body);
+  writeFileAtomic(LIVE_FEED_PUBLIC_PATH, body);
   return next;
 }
 

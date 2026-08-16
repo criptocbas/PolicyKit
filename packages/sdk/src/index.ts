@@ -69,6 +69,7 @@ export {
   FRESHNESS_MS,
   type Freshness,
   type FreshnessLevel,
+  type LiveFeedEvidence,
   type LiveFeedPayload,
 } from "./feed-freshness";
 
