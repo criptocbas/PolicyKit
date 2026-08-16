@@ -1,6 +1,6 @@
 # RFC: Enforced Protocol Execution
 
-**Status:** Research only — no implementation decision  
+**Status:** Research only — no implementation decision
 **Compatibility:** Would extend the current vault model; must not silently alter
 existing `execute_spend` semantics.
 
